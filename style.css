@@ -617,37 +617,3 @@ button {
     top: 0;
     left: 0;
 }
-
-/* Estilos específicos para iOS */
-@supports (-webkit-touch-callout: none) {
-    #play-pause {
-        -webkit-appearance: none;
-        appearance: none;
-        background: none !important;
-        border: none;
-        color: #FFFFFF !important;
-        padding: 0;
-        margin: 0;
-        font-family: system-ui;
-        text-shadow: none;
-        box-shadow: none;
-    }
-    
-    #play-pause:hover,
-    #play-pause:active,
-    #play-pause:focus {
-        background: none !important;
-        -webkit-appearance: none;
-        appearance: none;
-        color: #FFFFFF !important;
-        opacity: 0.8;
-    }
-}
-
-/* Específicamente para Safari en iOS */
-@supports (-webkit-touch-callout: none) and (not (translate: none)) {
-    #play-pause {
-        -webkit-text-fill-color: #FFFFFF;
-        opacity: 1 !important;
-    }
-}
