@@ -1,0 +1,567 @@
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background-color: #1E1E1E;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Aplicamos el cursor pointer normal */
+*[cursor="pointer"],
+button,
+a,
+[onclick],
+.clickable {
+    cursor: pointer;
+}
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 20px;
+}
+
+button {
+    padding: 10px;
+    background-color: blue;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.background-squares {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100vh;
+    z-index: 1;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.columns-container {
+    display: flex;
+    gap: 13px;
+    width: fit-content;
+}
+
+@keyframes floatColumn {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0); }
+}
+
+.column {
+    width: calc(20vw - 13px);
+    margin-top: -100px;
+    animation: floatColumn 6s ease-in-out infinite;
+}
+
+/* Diferentes tiempos de inicio para cada columna */
+.column:nth-child(1) { animation-delay: 0s; }
+.column:nth-child(2) { animation-delay: -1s; }
+.column:nth-child(3) { animation-delay: -2s; }
+.column:nth-child(4) { animation-delay: -3s; }
+.column:nth-child(5) { animation-delay: -4s; }
+.column:nth-child(6) { animation-delay: -5s; }
+
+/* Mantenemos los margin-top originales */
+.column:nth-child(1) { margin-top: -80px; }
+.column:nth-child(2) { margin-top: -110px; }
+.column:nth-child(3) { margin-top: -90px; }
+.column:nth-child(4) { margin-top: -120px; }
+.column:nth-child(5) { margin-top: -100px; }
+.column:nth-child(6) { margin-top: -85px; }
+
+.square {
+    border-radius: 12px;
+    width: 100%;
+    aspect-ratio: 1;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.square img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.3s ease;
+    opacity: 0; /* Comenzamos con opacidad 0 */
+}
+
+/* Clase para la animación de fade-in */
+.fade-in {
+    animation: fadeIn 0.8s ease-in forwards;
+}
+
+.square:hover img {
+    transform: scale(1.1);
+}
+
+/* Media queries para responsive */
+@media (max-width: 1200px) {
+    .column {
+        width: calc(25vw - 13px);
+    }
+}
+
+@media (max-width: 900px) {
+    .column {
+        width: calc(33vw - 13px);
+    }
+}
+
+@media (max-width: 600px) {
+    .column {
+        width: calc(50vw - 13px);
+    }
+}
+
+.custom-player {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    padding: 8px 16px;
+    background: none;  /* Eliminamos el fondo */
+    border: none;
+}
+
+#play-pause {
+    background: none;
+    border: none;
+    color: #FFFFFF;  /* Cambiado a blanco */
+    font-size: 28px; /* Ajusta el tamaño según sea necesario */
+    cursor: pointer;
+    position: absolute; /* Para posicionarlo en la parte inferior izquierda */
+    bottom: 10px; /* Espacio desde el fondo */
+    left: 10px; /* Espacio desde la izquierda */
+}
+
+#play-pause:hover {
+    text-shadow: 0 0 40px rgba(0, 0, 0, 1),
+                 0 0 80px rgba(0, 0, 0, 0.9),
+                 0 0 120px rgba(0, 0, 0, 0.8),
+                 0 0 160px rgba(0, 0, 0, 0.7);
+}
+
+/* Eliminamos todos los estados que puedan mostrar bordes o círculos */
+#play-pause:focus,
+#play-pause:active,
+#play-pause:-moz-focus-inner,
+#play-pause::-moz-focus-inner {
+    border: 0;
+    outline: none;
+    box-shadow: none;
+}
+
+.player-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.track-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#cover {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.track-text {
+    display: flex;
+    flex-direction: column;
+}
+
+#track-name {
+    font-weight: bold;
+}
+
+.controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.controls button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.controls button:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.progress {
+    height: 100%;
+    background: #000;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+/* Estilo para los rectángulos extra */
+.extra-square {
+    margin-top: -280px;  /* Para que se posicionen arriba del todo */
+}
+
+.square-text {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    font-family: 'JetBrains Mono', monospace;
+    color: #FFFFFF;
+    font-size: 1.2rem;
+    text-align: left;
+    background-color: rgba(30, 30, 30, 0.3);
+    backdrop-filter: blur(3px);
+    padding: 15px;
+    box-sizing: border-box;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    opacity: 0;
+    position: relative;
+    z-index: 2; /* Aseguramos que esté por encima de otros elementos */
+}
+
+.square-text:hover {
+    background-color: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(5px);
+    text-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Resetear la opacidad por defecto de todas las imágenes */
+.image-box img {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* Reducir opacidad de todas las imágenes cuando se hace hover sobre una imagen específica */
+.image-box:hover ~ .image-box img,
+.image-box:hover img ~ img {
+    opacity: 0.5;
+}
+
+/* Mantener opacidad normal de la imagen sobre la que está el cursor */
+.image-box:hover img {
+    opacity: 1;
+}
+
+/* Estilo para los cuadrados vacíos */
+.square > div:not(.square-text) {
+    background-color: transparent !important;
+    width: 100%;
+    height: 100%;
+}
+
+/* Asegurar que los cuadrados vacíos no tengan ningún efecto visual */
+.square:empty {
+    background-color: transparent;
+}
+
+/* Modificar la animación de fade-in para que sea más suave */
+@keyframes fadeIn {
+    from { 
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-text {
+    animation: fadeIn 1s ease-out forwards;
+}
+
+/* Ajustes responsive para el texto */
+@media (max-width: 768px) {
+    .square-text {
+        font-size: 1rem;
+        padding: 10px;
+    }
+}
+
+@keyframes scrollText {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+.song-title {
+    position: absolute;
+    bottom: 24px;
+    left: 50px;
+    font-size: 0.8rem;
+    color: white;
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0;
+    animation: scrollText 10s linear infinite;
+}
+
+.song-title-container {
+    position: absolute;
+    bottom: 4px;
+    left: 40px;
+    right: 10px;
+    height: 45px; /* Aumentamos la altura */
+    padding-top: 5px; /* Añadimos padding superior */
+    overflow: hidden;
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 10%,
+        black 90%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 10%,
+        black 90%,
+        transparent 100%
+    );
+}
+
+/* Ajustes base (para pantallas grandes de 1440px) */
+#play-pause {
+    font-size: 28px;
+    bottom: 10px;
+    left: 10px;
+}
+
+.song-title {
+    font-size: 1rem;
+    bottom: 24px;
+    left: 50px;
+}
+
+#time-display {
+    font-size: 1.2rem;
+}
+
+#motto {
+    font-size: 1.4rem !important;
+}
+
+/* Pantallas medianas (tablets y laptops pequeños) */
+@media (max-width: 1024px) {
+    #play-pause {
+        font-size: 24px;
+        bottom: 8px;
+        left: 8px;
+    }
+    
+    .song-title {
+        font-size: 1rem;
+        bottom: 20px;
+    }
+    
+    .square-text {
+        font-size: 1rem;
+    }
+
+    #time-display {
+        font-size: 1rem;
+    }
+
+    #motto {
+        font-size: 1.2rem !important; /* Usamos !important para sobrescribir el estilo inline */
+    }
+}
+
+/* Pantallas pequeñas (tablets verticales y móviles grandes) */
+@media (max-width: 768px) {
+    #play-pause {
+        font-size: 20px;
+        bottom: 6px;
+        left: 6px;
+    }
+    
+    .song-title {
+        font-size: 0.8rem;
+        bottom: 20px;
+        left: 40px;
+    }
+    
+    .square-text {
+        font-size: 0.9rem;
+    }
+
+    #time-display {
+        font-size: 0.8rem;
+    }
+
+    #motto {
+        font-size: 1rem !important; /* Usamos !important para sobrescribir el estilo inline */
+    }
+}
+
+/* Pantallas medianas */
+@media (max-width: 1230px) {
+    #play-pause {
+        font-size: 28px;
+        bottom: 10px;
+        left: 10px;
+    }
+    
+    .song-title {
+        font-size: 0.9rem;
+        bottom: 24px;
+        left: 50px;
+    }
+    
+    #time-display {
+        font-size: 1rem;
+    }
+    
+    #motto {
+        font-size: 1.2rem !important;
+    }
+}
+
+/* Pantallas muy pequeñas (móviles) */
+@media (max-width: 480px) {
+    #play-pause {
+        font-size: 18px;
+        bottom: 4px;
+        left: 4px;
+    }
+    
+    .song-title {
+        font-size: 0.8rem;
+        bottom: 20px;
+        left: 35px;
+    }
+    
+    .square-text {
+        font-size: 0.7rem;
+        padding: 8px;
+    }
+
+    #time-display {
+        font-size: 0.8rem;
+    }
+
+    #motto {
+        font-size: 1rem !important; /* Usamos !important para sobrescribir el estilo inline */
+    }
+}
+
+/* Pantallas extra grandes (1920px y superiores) */
+@media (min-width: 1920px) {
+    #play-pause {
+        font-size: 32px;
+        bottom: 12px;
+        left: 12px;
+    }
+    
+    .song-title {
+        font-size: 1.2rem;
+        bottom: 28px;
+        left: 60px;
+    }
+    
+    .song-title-container {
+        bottom: 4px;
+        left: 50px;
+        right: 20px;
+        height: 50px;
+    }
+    
+    .square-text {
+        font-size: 1.4rem;
+        padding: 20px;
+    }
+
+    #time-display {
+        font-size: 1.8rem;
+    }
+
+    #motto {
+        font-size: 2rem !important; /* Usamos !important para sobrescribir el estilo inline */
+    }
+}
+
+/* Pantallas extra pequeñas (360px) */
+@media (max-width: 360px) {
+    #play-pause {
+        font-size: 16px;
+        bottom: 3px;
+        left: 3px;
+    }
+    
+    .song-title {
+        font-size: 0.7rem;
+        bottom: 20px;
+        left: 30px;
+    }
+    
+    .square-text {
+        font-size: 0.6rem;
+        padding: 6px;
+    }
+    
+    #time-display {
+        font-size: 0.6rem;
+    }
+
+    #motto {
+        font-size: 0.8rem !important; /* Usamos !important para sobrescribir el estilo inline */
+    }
+}
