@@ -102,6 +102,17 @@ const player = new MusicPlayer();
 
 // Añadir los cuadrados al fondo
 function createSquares() {
+    // Implementar lazy loading de imágenes
+    if ('loading' in HTMLImageElement.prototype) {
+        // El navegador soporta lazy loading nativo
+        console.log('Lazy loading nativo disponible');
+    } else {
+        // Cargar un polyfill para navegadores que no soporten lazy loading
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js';
+        document.body.appendChild(script);
+    }
+    
     const container = document.createElement('div');
     container.className = 'background-squares';
     
@@ -327,6 +338,8 @@ function createSquares() {
                 img.src = imageSrc;
                 img.alt = 'Square image';
                 img.loading = 'lazy';
+                img.decoding = 'async';
+                img.setAttribute('importance', 'low');
                 square.appendChild(img);
                 originalSquares.push(square.cloneNode(true));
             } else {
@@ -366,6 +379,8 @@ function createSquares() {
                     img.src = images[randomImageIndex];
                     img.alt = 'Square image';
                     img.loading = 'lazy';
+                    img.decoding = 'async';
+                    img.setAttribute('importance', 'low');
                     
                     replacementSquare.appendChild(img);
                     column.appendChild(replacementSquare);

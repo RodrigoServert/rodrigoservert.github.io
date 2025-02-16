@@ -1,3 +1,26 @@
+:root {
+    /* Definir variables CSS para optimizar el rendimiento */
+    --main-bg-color: #1E1E1E;
+    --text-color: #FFFFFF;
+    --font-primary: 'JetBrains Mono', monospace;
+    --font-secondary: 'Averia Serif Libre', serif;
+}
+
+/* Optimizar las fuentes */
+@font-display: swap;
+
+/* Optimizar animaciones */
+@media (prefers-reduced-motion: reduce) {
+    .column {
+        animation: none;
+    }
+    
+    .fade-in {
+        animation: none;
+        opacity: 1;
+    }
+}
+
 body {
     margin: 0;
     padding: 0;

@@ -4,14 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Make Beautiful Things even if Nobody Cares</title>
+    
+    <!-- Precarga de recursos críticos -->
+    <link rel="preload" href="style.css?v=1" as="style">
+    <link rel="preload" href="script.js" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Averia+Serif+Libre:wght@300&family=JetBrains+Mono:wght@400;700&display=swap" as="style">
+    
+    <!-- Carga diferida de fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Estilos -->
     <link rel="stylesheet" href="style.css?v=1">
     <link href="https://fonts.googleapis.com/css2?family=Averia+Serif+Libre:wght@300&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Metadatos para SEO y rendimiento -->
+    <meta name="description" content="Make Beautiful Things even if Nobody Cares">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
 </head>
 <body>
     <div class="custom-player">
-        <audio id="audio-player"></audio>
-        <button id="play-pause"></button>
+        <audio id="audio-player" preload="none"></audio>
+        <button id="play-pause" aria-label="Reproducir/Pausar"></button>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </body>
 </html>
