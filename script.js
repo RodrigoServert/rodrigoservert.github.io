@@ -151,6 +151,10 @@ function createSquares() {
         'images/28.jpg',
         'images/29.jpg',
         'images/30.jpg',
+        'images/31.jpg',
+        'images/32.jpg',
+        'images/33.jpg',
+        'images/34.jpg',
     ];
     
     // Verificamos que tenemos imágenes
@@ -212,14 +216,26 @@ function createSquares() {
         }
     });
     
-    // Asignar las imágenes a todas las posiciones disponibles, excepto la central
+    // Modificar la parte donde se asignan las posiciones de las imágenes
     const imagePositions = positions
         .filter(pos => pos !== centralPosition)
         .slice(0, images.length);
 
+    // Barajar el array de imágenes antes de usarlo
+    const shuffledImages = [...images].sort(() => Math.random() - 0.5);
+    // Tomar solo tantas imágenes como posiciones tengamos disponibles
+    const selectedImages = shuffledImages.slice(0, imagePositions.length);
+
+    // Asegurarnos de que tenemos suficientes posiciones
+    if (imagePositions.length < images.length) {
+        console.warn('No hay suficientes posiciones para todas las imágenes');
+    }
+
     // Debug
     console.log('Posición central (texto):', centralPosition);
     console.log('Posiciones de imágenes:', imagePositions);
+    console.log('Número de posiciones:', imagePositions.length);
+    console.log('Número de imágenes:', images.length);
     
     for (let i = 0; i < 6; i++) {
         const column = document.createElement('div');
@@ -322,10 +338,12 @@ function createSquares() {
                 square.appendChild(textDiv);
                 originalSquares.push(square.cloneNode(true));
             } else if (imagePositions.includes(currentPosition)) {
-                // Crear cuadro de imagen
                 const img = document.createElement('img');
                 const imageIndex = imagePositions.indexOf(currentPosition);
-                const imageSrc = images[imageIndex];
+                const imageSrc = selectedImages[imageIndex];
+                
+                // Verificar que estamos usando la imagen correcta
+                console.log(`Creando imagen ${imageIndex + 1}: ${imageSrc}`);
                 
                 // Añadir el skeleton loader
                 const skeleton = document.createElement('div');
@@ -344,7 +362,8 @@ function createSquares() {
                 };
                 
                 img.onerror = function() {
-                    // Si hay error al cargar la imagen, mostramos un placeholder
+                    // Si hay error al cargar la imagen, mostramos un placeholder y logueamos el error
+                    console.error(`Error al cargar la imagen: ${imageSrc}`);
                     skeleton.style.backgroundColor = '#2a2a2a';
                     skeleton.style.animation = 'none';
                 };
@@ -391,7 +410,7 @@ function createSquares() {
                     replacementSquare.appendChild(skeleton);
                     
                     const img = document.createElement('img');
-                    const randomImageIndex = Math.floor(Math.random() * images.length);
+                    const randomImageIndex = Math.floor(Math.random() * selectedImages.length);
                     
                     img.style.opacity = '0';
                     img.onload = function() {
@@ -407,7 +426,7 @@ function createSquares() {
                         skeleton.style.animation = 'none';
                     };
                     
-                    img.src = images[randomImageIndex];
+                    img.src = selectedImages[randomImageIndex];
                     img.alt = 'Square image';
                     img.loading = 'lazy';
                     img.decoding = 'async';
