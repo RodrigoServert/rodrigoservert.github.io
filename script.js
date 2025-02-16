@@ -327,12 +327,26 @@ function createSquares() {
                 const imageIndex = imagePositions.indexOf(currentPosition);
                 const imageSrc = images[imageIndex];
                 
-                // Añadir evento de carga
+                // Añadir el skeleton loader
+                const skeleton = document.createElement('div');
+                skeleton.className = 'skeleton';
+                square.appendChild(skeleton);
+                
+                // Configurar la imagen
+                img.style.opacity = '0';
                 img.onload = function() {
-                    // Añadir clase fade-in cuando la imagen se haya cargado
+                    // Cuando la imagen cargue, ocultamos el skeleton y mostramos la imagen
                     setTimeout(() => {
+                        skeleton.style.display = 'none';
+                        img.style.opacity = '1';
                         img.classList.add('fade-in');
                     }, Math.random() * 500); // Retraso aleatorio entre 0 y 500ms
+                };
+                
+                img.onerror = function() {
+                    // Si hay error al cargar la imagen, mostramos un placeholder
+                    skeleton.style.backgroundColor = '#2a2a2a';
+                    skeleton.style.animation = 'none';
                 };
                 
                 img.src = imageSrc;
@@ -364,8 +378,6 @@ function createSquares() {
             originalSquares.forEach((originalSquare, index) => {
                 const clonedSquare = originalSquare.cloneNode(true);
                 
-                // Si es un cuadro de texto, lo reemplazamos por un cuadro de imagen
-                // cuando esté en la primera o última repetición
                 if (clonedSquare.querySelector('.square-text') && 
                     (k === 0 || k === extraSquaresNeeded - 1)) {
                     
@@ -373,9 +385,28 @@ function createSquares() {
                     const replacementSquare = document.createElement('div');
                     replacementSquare.className = 'square';
                     
+                    // Añadir el skeleton loader
+                    const skeleton = document.createElement('div');
+                    skeleton.className = 'skeleton';
+                    replacementSquare.appendChild(skeleton);
+                    
                     const img = document.createElement('img');
-                    // Usar una imagen aleatoria del array de imágenes
                     const randomImageIndex = Math.floor(Math.random() * images.length);
+                    
+                    img.style.opacity = '0';
+                    img.onload = function() {
+                        setTimeout(() => {
+                            skeleton.style.display = 'none';
+                            img.style.opacity = '1';
+                            img.classList.add('fade-in');
+                        }, Math.random() * 500);
+                    };
+                    
+                    img.onerror = function() {
+                        skeleton.style.backgroundColor = '#2a2a2a';
+                        skeleton.style.animation = 'none';
+                    };
+                    
                     img.src = images[randomImageIndex];
                     img.alt = 'Square image';
                     img.loading = 'lazy';
