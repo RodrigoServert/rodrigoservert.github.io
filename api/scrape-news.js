@@ -89,10 +89,18 @@ async function scrapeNews(dateStr) {
 }
 
 module.exports = async (req, res) => {
+    // Configurar CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    console.log('API endpoint llamado');
     try {
         const data = await scrapeNews();
+        console.log('Datos obtenidos:', data);
         res.status(200).json(data);
     } catch (error) {
+        console.error('Error en el endpoint:', error);
         res.status(500).json({ error: error.message });
     }
 }; 

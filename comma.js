@@ -128,11 +128,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function fetchScrapedNews() {
         try {
-            const response = await fetch('https://rodrigoservert-github-ak6ht6w9z-rodrigos-projects-b47d89cf.vercel.app/api/scrape-news');
+            const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news');
             const data = await response.json();
+            console.log('Respuesta del servidor:', data);
             return data;
         } catch (error) {
             console.error('Error fetching scraped news:', error);
+            console.error('Error completo:', error.message);
             return newsGroups[0];
         }
     }
