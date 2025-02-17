@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function fetchScrapedNews() {
         try {
-            const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news');
+            const response = await fetch('https://rodrigoservert-github-dziz972i4-rodrigos-projects-b47d89cf.vercel.app/api/scrape-news');
             const data = await response.json();
             console.log('Respuesta del servidor:', data);
             return data;

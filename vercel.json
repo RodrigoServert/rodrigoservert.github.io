@@ -6,8 +6,10 @@
   "routes": [
     { 
       "src": "/api/scrape-news",
-      "methods": ["GET"],
-      "dest": "/api/scrape-news.js"
+      "dest": "/api/scrape-news.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
     }
   ],
   "env": {

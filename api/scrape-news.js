@@ -89,10 +89,7 @@ async function scrapeNews(dateStr) {
 }
 
 module.exports = async (req, res) => {
-    // Configurar CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     console.log('API endpoint llamado');
     try {
