@@ -128,7 +128,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function fetchScrapedNews() {
         try {
-            const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news');
+            const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news', {
+                mode: 'cors',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             const data = await response.json();
             console.log('Noticias scrapeadas:', data); // Para debug
             return data;
