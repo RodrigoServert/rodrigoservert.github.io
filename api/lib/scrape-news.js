@@ -1,4 +1,4 @@
-const { scrapeNews } = require('../scripts/scrapeNews');
+const { scrapeNews } = require('./lib/scrapeNews');
 
 module.exports = async (req, res) => {
     // Configurar CORS
