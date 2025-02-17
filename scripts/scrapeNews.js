@@ -21,11 +21,14 @@ async function getTechCrunchImage(url) {
 async function scrapeNews(dateStr) {
     try {
         console.log('Iniciando scraping de TLDR.tech...');
+        console.log('Fecha recibida:', dateStr);
         
         // Si no se proporciona fecha, empezar con la fecha actual en zona horaria española
         let currentDate = dateStr 
             ? new Date(dateStr) 
             : new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Madrid"}));
+            
+        console.log('Fecha procesada:', currentDate);
             
         let attempts = 0;
         const maxAttempts = 7; // Máximo una semana atrás
