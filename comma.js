@@ -267,4 +267,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error('No se pudo obtener la newsletter después de varios intentos');
         return null;
     }
+
+    // Cargar noticias al iniciar
+    await loadNews();
+    
+    // Añadir event listener para el botón de actualizar
+    document.querySelector('.reload-news').addEventListener('click', loadNews);
 });
