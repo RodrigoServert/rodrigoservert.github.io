@@ -27,7 +27,15 @@ body {
     min-height: 100vh;
     background-color: #1E1E1E;
     position: relative;
-    overflow: hidden;
+    overflow: hidden; /* Mantiene el scroll bloqueado por defecto */
+}
+
+/* Estilo específico para The Comma que permite scroll */
+body.comma-page {
+    background-color: var(--main-bg-color);
+    min-height: 100vh;
+    overflow: auto; /* Permite scroll en The Comma */
+    overflow-x: hidden; /* Previene scroll horizontal */
 }
 
 /* Aplicamos el cursor pointer normal */
@@ -161,7 +169,7 @@ button {
 
 .custom-player {
     position: fixed;
-    bottom: 40px;
+    bottom: 80px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
@@ -616,4 +624,519 @@ button {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+/* Estilos para el menú de navegación inferior */
+.bottom-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--main-bg-color);
+    border-radius: 50px;
+    padding: 8px 16px; /* Reducido el padding horizontal */
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-content {
+    display: flex;
+    gap: 20px; /* Reducido el gap entre elementos */
+    align-items: center;
+}
+
+.nav-item {
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    padding: 4px 16px; /* Aumentado el padding horizontal de los items */
+    border-radius: 20px;
+    letter-spacing: 0.5px; /* Añadido un poco de espaciado entre letras */
+}
+
+.nav-item:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.nav-item.active {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Media queries para responsive */
+@media (max-width: 480px) {
+    .bottom-nav {
+        bottom: 15px;
+        padding: 6px 16px;
+    }
+    
+    .nav-content {
+        gap: 16px;
+    }
+    
+    .nav-item {
+        font-size: 0.8rem;
+        padding: 3px 10px;
+    }
+    
+    .custom-player {
+        bottom: 70px;
+    }
+}
+
+/* Estilos para The Comma */
+.comma-page {
+    background-color: var(--main-bg-color);
+    min-height: 100vh;
+}
+
+.comma-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+}
+
+.comma-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    animation: fadeIn 2s ease-out;
+}
+
+.comma {
+    font-family: var(--font-secondary);
+    font-size: 20rem;
+    color: white;
+    line-height: 0.8;
+    transform: rotate(10deg);
+    text-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+    animation: floatComma 6s ease-in-out infinite;
+}
+
+.comma-text {
+    font-family: var(--font-primary);
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 4px;
+    transform: translateY(-40px);
+}
+
+@keyframes floatComma {
+    0%, 100% { transform: rotate(10deg) translateY(0); }
+    50% { transform: rotate(10deg) translateY(-20px); }
+}
+
+/* Media queries para The Comma */
+@media (max-width: 768px) {
+    .comma {
+        font-size: 12rem;
+    }
+    
+    .comma-text {
+        font-size: 1rem;
+        transform: translateY(-20px);
+    }
+}
+
+@media (max-width: 480px) {
+    .comma {
+        font-size: 8rem;
+    }
+    
+    .comma-text {
+        font-size: 0.9rem;
+        transform: translateY(-15px);
+    }
+}
+
+/* Ajustes para la cabecera del periódico */
+.newspaper-header {
+    width: 100%;
+    padding: 4rem 0 2rem 0; /* Aumentado el padding superior de 2rem a 4rem */
+    margin-top: 0;
+    background-color: var(--main-bg-color);
+    opacity: 0;
+    animation: headerFadeIn 2s ease-out forwards;
+}
+
+.newspaper-title {
+    font-family: 'Girassol', serif;
+    font-size: 4.5rem;
+    color: white;
+    text-align: center;
+    font-weight: normal;
+    margin: 0;
+    letter-spacing: -1px;
+    line-height: 1;
+    animation: headerFadeIn 2s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+/* Media queries para la cabecera */
+@media (max-width: 768px) {
+    .newspaper-header {
+        padding: 3rem 0 1.5rem 0; /* Ajustado proporcionalmente */
+    }
+
+    .newspaper-title {
+        font-size: 3.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .newspaper-header {
+        padding: 2rem 0 1rem 0; /* Ajustado proporcionalmente */
+    }
+
+    .newspaper-title {
+        font-size: 2.5rem;
+    }
+}
+
+.newspaper-date {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.4rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    margin-top: 0.5rem;
+    animation: headerFadeIn 2s ease-out 0.6s forwards;
+    opacity: 0;
+}
+
+@media (max-width: 768px) {
+    .newspaper-date {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .newspaper-date {
+        font-size: 1.1rem;
+    }
+}
+
+@keyframes headerFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Grid de noticias */
+main.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    padding: 30px 15px;
+    margin-top: 0px;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 100px;
+}
+
+/* Crear columnas */
+.news-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Margen vertical entre noticias, igual que el horizontal */
+    width: 320px;
+}
+
+.news-item {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 0;
+    transition: transform 0.2s ease;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-item:hover {
+    transform: scale(1.02);
+}
+
+.news-skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        var(--main-bg-color) 25%,
+        rgba(255, 255, 255, 0.05) 50%,
+        var(--main-bg-color) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    z-index: 3;
+    border-radius: 16px;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.news-content-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.news-item-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+}
+
+.news-item-header {
+    margin-bottom: 1rem;
+}
+
+.news-item-date {
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 0.5rem;
+}
+
+.news-category {
+    display: inline-block;
+    background-color: var(--main-bg-color);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+}
+
+.news-image {
+    width: 100%;
+    height: 200px;
+    background-color: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    position: relative;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+
+.news-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: absolute; /* Añadido */
+    top: 0; /* Añadido */
+    left: 0; /* Añadido */
+}
+
+/* Eliminamos el hover */
+.news-image:hover img {
+    /* Eliminado */
+}
+
+.news-content {
+    padding: 30px;
+}
+
+.news-title {
+    font-family: 'EB Garamond', serif;
+    font-size: 1.8rem;
+    color: white;
+    margin: 0;
+    line-height: 1.2;
+    font-weight: normal;
+    margin-bottom: 15px;
+}
+
+.news-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    line-height: 1.6;
+    font-weight: 300;
+}
+
+/* Media queries para responsive */
+@media (max-width: 1400px) {
+    .news-grid {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: auto;
+    }
+}
+
+@media (max-width: 1024px) {
+    .news-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .news-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .news-grid {
+        grid-template-columns: 1fr;
+        margin-top: 150px;
+    }
+}
+
+/* Asegurarnos de que el contenedor principal permita scroll */
+main.news-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 15px;
+    padding: 30px 15px;
+    margin-top: 0px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 100px;
+    justify-content: center;
+}
+
+/* Añadir al JavaScript existente para manejar la carga */
+.news-item.loaded .news-skeleton {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.news-item.loaded .news-content-wrapper {
+    opacity: 1;
+}
+
+/* Botón de recarga */
+.reload-button {
+    text-align: right;
+    padding: 0 30px 0 0;
+    margin-bottom: -10px; /* Aumentado el margen negativo */
+}
+
+.reload-news {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    padding: 2px 20px; /* Reducido aún más el padding vertical */
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.reload-news:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.loader {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.news-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.article-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.article-link:hover .news-content {
+    background-color: rgba(255, 255, 255, 0.01);
+}
+
+.news-category-overlay {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+/* Skeleton styles */
+.skeleton-item {
+    animation: skeleton-loading 1s linear infinite alternate;
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 200px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+}
+
+.skeleton-category {
+    width: 80px;
+    height: 24px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    margin-bottom: 15px;
+}
+
+.skeleton-title {
+    width: 90%;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.skeleton-text {
+    width: 100%;
+    height: 16px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 0.8;
+    }
 }

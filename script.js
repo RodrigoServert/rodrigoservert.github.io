@@ -460,3 +460,107 @@ document.getElementById('play-pause').addEventListener('click', function() {
         this.textContent = '▶'; // Cambiar a play
     }
 });
+
+async function updateNews() {
+    try {
+        const response = await fetch('/scrape-news');
+        const data = await response.json();
+        
+        // Test directo con una URL de imagen
+        const testImage = document.getElementById('test-image');
+        // Usar la primera imagen de TechCrunch que encontremos
+        const techCrunchArticle = data.news.find(item => 
+            item.link && item.link.includes('techcrunch.com') && item.image
+        );
+        
+        if (techCrunchArticle) {
+            console.log('Probando con imagen:', techCrunchArticle.image);
+            testImage.src = techCrunchArticle.image;
+            testImage.alt = techCrunchArticle.title;
+            
+            // Añadir eventos para debug
+            testImage.onerror = (e) => console.error('Error cargando imagen test:', e);
+            testImage.onload = () => console.log('Imagen test cargada correctamente');
+        } else {
+            console.log('No se encontró ningún artículo de TechCrunch con imagen');
+        }
+
+        if (data.isUpdated) {
+            document.getElementById('updateButton').textContent = 'All good';
+            document.getElementById('updateButton').disabled = true;
+        } else {
+            document.getElementById('updateButton').textContent = 'Update';
+        }
+        
+        // Limpiar el contenedor de noticias
+        const newsContainer = document.getElementById('newsContainer');
+        newsContainer.innerHTML = '';
+        
+        // Añadir las nuevas noticias
+        data.news.forEach(newsItem => {
+            console.log('Procesando noticia:', newsItem); // Para debug
+            if (newsItem.link && newsItem.link.includes('techcrunch.com')) {
+                console.log('Imagen de TechCrunch:', newsItem.image); // Para debug
+            }
+            const newsElement = createNewsElement(newsItem);
+            newsContainer.appendChild(newsElement);
+        });
+        
+    } catch (error) {
+        console.error('Error actualizando noticias:', error);
+    }
+}
+
+// Llamar a updateNews cuando se carga la página
+document.addEventListener('DOMContentLoaded', updateNews);
+
+function createNewsElement(newsItem) {
+    console.log('Creando elemento para:', newsItem.title);
+    
+    const newsElement = document.createElement('div');
+    newsElement.className = 'news-item loaded';
+
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'news-content-wrapper';
+
+    // Crear el link contenedor
+    const articleLink = document.createElement('a');
+    articleLink.href = newsItem.link || '#';
+    articleLink.className = 'article-link';
+    articleLink.target = '_blank';
+    articleLink.rel = 'noopener noreferrer';
+
+    // Añadir imagen si existe y es de TechCrunch
+    if (newsItem.image && newsItem.link && newsItem.link.includes('techcrunch.com')) {
+        console.log('Añadiendo imagen:', newsItem.image);
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'news-image';
+        const img = document.createElement('img');
+        img.src = newsItem.image;
+        img.alt = newsItem.title;
+        
+        // Añadir evento para debug
+        img.onerror = () => console.error('Error cargando imagen:', newsItem.image);
+        img.onload = () => console.log('Imagen cargada correctamente:', newsItem.image);
+        
+        imageDiv.appendChild(img);
+        articleLink.appendChild(imageDiv);
+    }
+
+    // Crear el contenido
+    const content = document.createElement('div');
+    content.className = 'news-content';
+    content.innerHTML = `
+        <div class="news-header">
+            <span class="news-category">${newsItem.category}</span>
+        </div>
+        <h2 class="news-title">${newsItem.title}</h2>
+        <p class="news-text">${newsItem.text}</p>
+    `;
+
+    articleLink.appendChild(content);
+    contentWrapper.appendChild(articleLink);
+    newsElement.appendChild(contentWrapper);
+
+    return newsElement;
+}
