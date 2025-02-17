@@ -12,8 +12,15 @@ module.exports = async (req, res) => {
     
     try {
         console.log('API: Iniciando scrape-news');
+        const date = req.query.date;
+        console.log('API: Fecha recibida:', date);
+        
+        const news = await scrapeNews(date);
+        console.log('API: Scraping completado');
+        
+        res.json(news);
     } catch (error) {
-        console.error('Error al procesar la solicitud:', error);
-        res.status(500).json({ error: 'Error al procesar la solicitud' });
+        console.error('API Error:', error);
+        res.status(500).json({ error: error.message });
     }
 }; 

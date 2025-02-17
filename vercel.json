@@ -9,5 +9,10 @@
   "routes": [
     { "src": "/api/scrape-news", "dest": "/api/scrape-news.js" },
     { "src": "/(.*)", "dest": "/$1" }
-  ]
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
+    }
+  }
 }
