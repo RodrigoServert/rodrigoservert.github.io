@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
             const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news', {
                 mode: 'cors',
-                credentials: 'same-origin',
+                credentials: 'omit',
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -248,6 +248,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             try {
                 const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news', {
                     method: 'POST',
+                    mode: 'cors',
+                    credentials: 'omit',
                     headers: {
                         'Content-Type': 'application/json'
                     },
