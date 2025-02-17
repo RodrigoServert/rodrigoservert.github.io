@@ -93,9 +93,11 @@ async function scrapeNews(dateStr) {
 }
 
 module.exports = async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', 'https://rodrigoservert.github.io');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    console.log('API endpoint llamado');
+    console.log('API endpoint llamado - Iniciando scraping...');
     try {
         const data = await scrapeNews();
         console.log('Datos obtenidos:', data);

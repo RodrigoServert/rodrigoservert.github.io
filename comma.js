@@ -128,13 +128,26 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function fetchScrapedNews() {
         try {
+            console.log('Intentando obtener noticias del servidor...');
             const response = await fetch('https://rodrigoservert-github-dziz972i4-rodrigos-projects-b47d89cf.vercel.app/api/scrape-news');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
             console.log('Respuesta del servidor:', data);
+            
+            if (!data || !data.news || data.news.length === 0) {
+                throw new Error('No se recibieron noticias válidas');
+            }
+            
             return data;
         } catch (error) {
-            console.error('Error fetching scraped news:', error);
-            console.error('Error completo:', error.message);
+            console.error('Error detallado al obtener noticias:', {
+                message: error.message,
+                stack: error.stack,
+                type: error.name
+            });
+            console.log('Cayendo en noticias por defecto debido al error');
             return newsGroups[0];
         }
     }
