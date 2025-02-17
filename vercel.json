@@ -8,7 +8,7 @@
       "src": "/api/scrape-news",
       "dest": "/api/scrape-news.js",
       "headers": {
-        "Access-Control-Allow-Origin": "https://rodrigoservert.github.io",
+        "Access-Control-Allow-Origin": "https://rodrigoservert.github.io, https://www.rodrigoservert.github.io",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
       }
