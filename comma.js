@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function fetchScrapedNews() {
         try {
-            const response = await fetch('/scrape-news');
+            const response = await fetch('/api/scrape-news');
             const data = await response.json();
             console.log('Noticias scrapeadas:', data); // Para debug
             return data;
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log(`Intentando con fecha: ${formattedDate}`);
             
             try {
-                const response = await fetch('/scrape-news', {
+                const response = await fetch('/api/scrape-news', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
