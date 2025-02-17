@@ -50,7 +50,11 @@ async function scrapeNews(dateStr) {
                         const cleanTitle = title.replace(/\(\d+ minute read\)/g, '').trim();
                         
                         news.push({
-                            category: formattedDate,
+                            category: currentDate.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            }),
                             title: cleanTitle,
                             text,
                             link

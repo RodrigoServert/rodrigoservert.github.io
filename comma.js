@@ -165,6 +165,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
 
             const newsData = await fetchScrapedNews();
+            console.log('Artículos con imágenes:', 
+                newsData.news.filter(item => item.image).length,
+                'de',
+                newsData.news.length
+            );
             
             // Limpiar los skeletons antes de añadir las noticias reales
             newsColumns.forEach(column => column.innerHTML = '');
@@ -179,7 +184,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                                     ${newsItem.image && newsItem.link && newsItem.link.includes('techcrunch.com') ? `
                                         <div class="news-image">
                                             <span class="news-category news-category-overlay">${newsItem.category}</span>
-                                            <img src="${newsItem.image}" alt="${newsItem.title}" />
+                                            <img 
+                                                src="${newsItem.image}" 
+                                                alt="${newsItem.title}"
+                                                onerror="this.style.display='none'"
+                                                onload="this.style.display='block'"
+                                            />
                                         </div>
                                         <div class="news-content">
                                             <h2 class="news-title">${newsItem.title}</h2>
