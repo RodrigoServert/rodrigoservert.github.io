@@ -171,17 +171,19 @@ document.addEventListener('DOMContentLoaded', async function() {
                 newsData.news.length
             );
             
-            // Limpiar los skeletons antes de añadir las noticias reales
-            newsColumns.forEach(column => column.innerHTML = '');
+            // Distribuir las noticias en columnas
+            let currentColumn = 0;
+            const columns = Array.from(newsColumns);
+            columns.forEach(column => column.innerHTML = ''); // Limpiar columnas
             
-            newsData.news.forEach((newsItem, index) => {
-                const column = newsColumns[index % 4];
+            newsData.news.forEach(newsItem => {
+                const column = columns[currentColumn];
                 if (column) {
                     const articleTemplate = `
                         <article class="news-item">
                             <a href="${newsItem.link || '#'}" class="article-link" target="_blank" rel="noopener noreferrer">
                                 <div class="news-content-wrapper" style="opacity: 0; transition: opacity 0.5s ease;">
-                                    ${newsItem.image && newsItem.link && newsItem.link.includes('techcrunch.com') ? `
+                                    ${newsItem.image ? `
                                         <div class="news-image">
                                             <span class="news-category news-category-overlay">${newsItem.category}</span>
                                             <img 
@@ -209,6 +211,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </article>
                     `;
                     column.innerHTML += articleTemplate;
+                    currentColumn = (currentColumn + 1) % columns.length;
                 }
             });
             

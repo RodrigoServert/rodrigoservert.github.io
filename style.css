@@ -834,7 +834,7 @@ button {
 /* Grid de noticias */
 main.news-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 15px;
     padding: 30px 15px;
     margin-top: 0px;
@@ -848,8 +848,7 @@ main.news-grid {
 .news-column {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Margen vertical entre noticias, igual que el horizontal */
-    width: 320px;
+    gap: 15px;
 }
 
 .news-item {
