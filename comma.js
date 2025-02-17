@@ -128,27 +128,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function fetchScrapedNews() {
         try {
-            console.log('Intentando obtener noticias del servidor...');
-            const response = await fetch('https://rodrigoservert-github-dziz972i4-rodrigos-projects-b47d89cf.vercel.app/api/scrape-news');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            const response = await fetch('/scrape-news');
             const data = await response.json();
-            console.log('Respuesta del servidor:', data);
-            
-            if (!data || !data.news || data.news.length === 0) {
-                throw new Error('No se recibieron noticias válidas');
-            }
-            
+            console.log('Noticias scrapeadas:', data); // Para debug
             return data;
         } catch (error) {
-            console.error('Error detallado al obtener noticias:', {
-                message: error.message,
-                stack: error.stack,
-                type: error.name
-            });
-            console.log('Cayendo en noticias por defecto debido al error');
-            return newsGroups[0];
+            console.error('Error fetching scraped news:', error);
+            return newsGroups[0]; // Fallback a noticias estáticas
         }
     }
 
@@ -178,33 +164,21 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
 
             const newsData = await fetchScrapedNews();
-            console.log('Artículos con imágenes:', 
-                newsData.news.filter(item => item.image).length,
-                'de',
-                newsData.news.length
-            );
             
-            // Distribuir las noticias en columnas
-            let currentColumn = 0;
-            const columns = Array.from(newsColumns);
-            columns.forEach(column => column.innerHTML = ''); // Limpiar columnas
+            // Limpiar los skeletons antes de añadir las noticias reales
+            newsColumns.forEach(column => column.innerHTML = '');
             
-            newsData.news.forEach(newsItem => {
-                const column = columns[currentColumn];
+            newsData.news.forEach((newsItem, index) => {
+                const column = newsColumns[index % 4];
                 if (column) {
                     const articleTemplate = `
                         <article class="news-item">
                             <a href="${newsItem.link || '#'}" class="article-link" target="_blank" rel="noopener noreferrer">
                                 <div class="news-content-wrapper" style="opacity: 0; transition: opacity 0.5s ease;">
-                                    ${newsItem.image ? `
+                                    ${newsItem.image && newsItem.link && newsItem.link.includes('techcrunch.com') ? `
                                         <div class="news-image">
                                             <span class="news-category news-category-overlay">${newsItem.category}</span>
-                                            <img 
-                                                src="${newsItem.image}" 
-                                                alt="${newsItem.title}"
-                                                onerror="this.style.display='none'"
-                                                onload="this.style.display='block'"
-                                            />
+                                            <img src="${newsItem.image}" alt="${newsItem.title}" />
                                         </div>
                                         <div class="news-content">
                                             <h2 class="news-title">${newsItem.title}</h2>
@@ -224,7 +198,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </article>
                     `;
                     column.innerHTML += articleTemplate;
-                    currentColumn = (currentColumn + 1) % columns.length;
                 }
             });
             
@@ -265,25 +238,62 @@ document.addEventListener('DOMContentLoaded', async function() {
             const url = `https://tldr.tech/tech/${formattedDate}`;
             
             console.log(`Intentando con fecha: ${formattedDate}`);
-
+            
             try {
-                const response = await fetch(url);
+                const response = await fetch('/scrape-news', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ date: formattedDate })
+                });
+                
                 const data = await response.json();
-                return data;
+                if (data && data.news && data.news.length > 0) {
+                    return formattedDate;
+                }
             } catch (error) {
-                console.error(`Error al obtener la newsletter para ${formattedDate}:`, error);
-                currentDate.setDate(currentDate.getDate() - 1);
-                attempts++;
+                console.log(`Error con fecha ${formattedDate}:`, error);
             }
+
+            currentDate.setDate(currentDate.getDate() - 1);
+            attempts++;
         }
 
-        console.error('No se pudo obtener la newsletter después de varios intentos');
-        return null;
+        throw new Error('No se encontró una newsletter válida en los últimos 7 días');
     }
+
+    // Modificar el event listener del botón
+    document.querySelector('.reload-news').addEventListener('click', async function() {
+        const button = this;
+        const originalText = button.textContent;
+        
+        try {
+            button.innerHTML = 'Loading <span class="loader"></span>';
+            button.disabled = true;
+            
+            const newsGrid = document.querySelector('.news-grid');
+            // Mostrar skeletons mientras se cargan las nuevas noticias
+            const newsColumns = document.querySelectorAll('.news-column');
+            newsColumns.forEach(column => {
+                column.innerHTML = Array(3).fill(createSkeletonTemplate()).join('');
+            });
+            
+            // Simplemente volver a cargar las noticias como al inicio
+            await loadNews();
+            
+            button.innerHTML = originalText;
+        } catch (error) {
+            console.error('Error actualizando noticias:', error);
+            button.innerHTML = 'Error loading news';
+            setTimeout(() => {
+                button.innerHTML = originalText;
+            }, 2000);
+        } finally {
+            button.disabled = false;
+        }
+    });
 
     // Cargar noticias al iniciar
     await loadNews();
-    
-    // Añadir event listener para el botón de actualizar
-    document.querySelector('.reload-news').addEventListener('click', loadNews);
 });

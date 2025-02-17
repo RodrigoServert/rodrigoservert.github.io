@@ -834,7 +834,7 @@ button {
 /* Grid de noticias */
 main.news-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 15px;
     padding: 30px 15px;
     margin-top: 0px;
@@ -848,7 +848,8 @@ main.news-grid {
 .news-column {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 15px; /* Margen vertical entre noticias, igual que el horizontal */
+    width: 320px;
 }
 
 .news-item {
@@ -975,6 +976,7 @@ main.news-grid {
 @media (max-width: 1400px) {
     .news-grid {
         grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: auto;
     }
 }
 
@@ -987,26 +989,30 @@ main.news-grid {
 @media (max-width: 768px) {
     .news-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 15px;
     }
 }
 
 @media (max-width: 480px) {
     .news-grid {
         grid-template-columns: 1fr;
+        margin-top: 150px;
     }
 }
 
 /* Asegurarnos de que el contenedor principal permita scroll */
 main.news-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    flex-wrap: nowrap;
     gap: 15px;
     padding: 30px 15px;
     margin-top: 0px;
-    width: 90%;
+    width: fit-content;
     margin-left: auto;
     margin-right: auto;
     padding-bottom: 100px;
+    justify-content: center;
 }
 
 /* Añadir al JavaScript existente para manejar la carga */
