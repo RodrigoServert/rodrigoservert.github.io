@@ -4,6 +4,13 @@
     { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/api/scrape-news", "dest": "/api/scrape-news.js" }
-  ]
+    { 
+      "src": "/api/scrape-news",
+      "methods": ["GET"],
+      "dest": "/api/scrape-news.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 } 
