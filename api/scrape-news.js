@@ -1,3 +1,5 @@
+const { scrapeNews } = require('./lib/scraper');
+
 module.exports = async (req, res) => {
     // Configurar CORS
     res.setHeader('Access-Control-Allow-Origin', 'https://rodrigoservert.github.io');
