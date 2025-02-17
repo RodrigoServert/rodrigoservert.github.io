@@ -128,13 +128,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function fetchScrapedNews() {
         try {
-            const response = await fetch('/scrape-news');
+            const response = await fetch('https://rodrigoservert-github-ak6ht6w9z-rodrigos-projects-b47d89cf.vercel.app/api/scrape-news');
             const data = await response.json();
-            console.log('Noticias scrapeadas:', data); // Para debug
             return data;
         } catch (error) {
             console.error('Error fetching scraped news:', error);
-            return newsGroups[0]; // Fallback a noticias estáticas
+            return newsGroups[0];
         }
     }
 
@@ -238,62 +237,19 @@ document.addEventListener('DOMContentLoaded', async function() {
             const url = `https://tldr.tech/tech/${formattedDate}`;
             
             console.log(`Intentando con fecha: ${formattedDate}`);
-            
+
             try {
-                const response = await fetch('/scrape-news', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ date: formattedDate })
-                });
-                
+                const response = await fetch(url);
                 const data = await response.json();
-                if (data && data.news && data.news.length > 0) {
-                    return formattedDate;
-                }
+                return data;
             } catch (error) {
-                console.log(`Error con fecha ${formattedDate}:`, error);
+                console.error(`Error al obtener la newsletter para ${formattedDate}:`, error);
+                currentDate.setDate(currentDate.getDate() - 1);
+                attempts++;
             }
-
-            currentDate.setDate(currentDate.getDate() - 1);
-            attempts++;
         }
 
-        throw new Error('No se encontró una newsletter válida en los últimos 7 días');
+        console.error('No se pudo obtener la newsletter después de varios intentos');
+        return null;
     }
-
-    // Modificar el event listener del botón
-    document.querySelector('.reload-news').addEventListener('click', async function() {
-        const button = this;
-        const originalText = button.textContent;
-        
-        try {
-            button.innerHTML = 'Loading <span class="loader"></span>';
-            button.disabled = true;
-            
-            const newsGrid = document.querySelector('.news-grid');
-            // Mostrar skeletons mientras se cargan las nuevas noticias
-            const newsColumns = document.querySelectorAll('.news-column');
-            newsColumns.forEach(column => {
-                column.innerHTML = Array(3).fill(createSkeletonTemplate()).join('');
-            });
-            
-            // Simplemente volver a cargar las noticias como al inicio
-            await loadNews();
-            
-            button.innerHTML = originalText;
-        } catch (error) {
-            console.error('Error actualizando noticias:', error);
-            button.innerHTML = 'Error loading news';
-            setTimeout(() => {
-                button.innerHTML = originalText;
-            }, 2000);
-        } finally {
-            button.disabled = false;
-        }
-    });
-
-    // Cargar noticias al iniciar
-    await loadNews();
 });
