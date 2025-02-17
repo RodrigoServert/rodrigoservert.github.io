@@ -6,11 +6,16 @@ module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     
     try {
-        const date = req.query.date; // Por si enviamos una fecha específica
+        console.log('API: Iniciando scrape-news');
+        const date = req.query.date;
+        console.log('API: Fecha recibida:', date);
+        
         const news = await scrapeNews(date);
+        console.log('API: Scraping completado');
+        
         res.json(news);
     } catch (error) {
-        console.error('Error en API:', error);
+        console.error('API Error:', error);
         res.status(500).json({ error: error.message });
     }
 }; 
