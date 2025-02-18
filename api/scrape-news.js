@@ -1,6 +1,12 @@
 const { scrapeNews } = require('./lib/scraper');
 
 module.exports = async (req, res) => {
+    console.log('API: Módulo cargado');
+    console.log('API: Dependencias disponibles:', {
+        axios: require('axios') ? 'Sí' : 'No',
+        cheerio: require('cheerio') ? 'Sí' : 'No'
+    });
+
     // Configurar CORS
     res.setHeader('Access-Control-Allow-Origin', 'https://rodrigoservert.github.io');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
