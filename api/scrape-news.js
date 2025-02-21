@@ -1,6 +1,5 @@
-console.log('Módulo scrape-news.js cargado');
+console.log('=== NUEVO DEPLOY ' + new Date().toISOString() + ' ===');
 const { scrapeNews } = require('./lib/scraper');
-console.log('Módulo scraper importado correctamente');
 
 module.exports = async (req, res) => {
     try {
