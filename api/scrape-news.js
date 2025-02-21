@@ -14,13 +14,23 @@ module.exports = async (req, res) => {
         return;
     }
     
-    try {
-        console.log('API: Iniciando scraping');
-        const news = await scrapeNews();
-        console.log('API: Scraping completado');
-        res.json(news);
-    } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({ error: error.message });
-    }
-}; 
+    // Respuesta de prueba
+    res.json({
+        test: true,
+        timestamp: new Date().toISOString(),
+        news: getDefaultNews().news
+    });
+};
+
+// Función temporal para noticias por defecto
+function getDefaultNews() {
+    return {
+        news: [
+            {
+                category: "Test",
+                title: "Test News",
+                text: "This is a test news item"
+            }
+        ]
+    };
+} 
