@@ -21,6 +21,7 @@ async function getTechCrunchImage(url) {
 
 async function scrapeNews(dateStr) {
     try {
+        const totalStartTime = Date.now();
         console.log('Iniciando scraping de TLDR.tech...');
         const startTime = Date.now();
         
@@ -107,17 +108,17 @@ async function scrapeNews(dateStr) {
                         .filter(item => item.link && item.link.includes('techcrunch.com'))
                         .slice(0, 3);
                     
-                    console.log(`Encontrados ${techCrunchArticles.length} artículos de TechCrunch`);
+                    console.log(`🔍 Encontrados ${techCrunchArticles.length} artículos de TechCrunch para procesar`);
                     
                     try {
                         await Promise.race([
-                            Promise.all(techCrunchArticles.map(async article => {
+                            Promise.all(techCrunchArticles.map(async (article, index) => {
                                 const startTime = Date.now();
                                 try {
                                     article.image = await getTechCrunchImage(article.link);
-                                    console.log(`Imagen para "${article.title}": ${article.image ? 'OK' : 'No encontrada'} (${Date.now() - startTime}ms)`);
+                                    console.log(`📸 [${index + 1}/${techCrunchArticles.length}] Imagen: ${article.image ? '✅' : '❌'} (${Date.now() - startTime}ms)`);
                                 } catch (error) {
-                                    console.log(`Error obteniendo imagen para "${article.title}" (${Date.now() - startTime}ms):`, error.message);
+                                    console.log(`❌ [${index + 1}/${techCrunchArticles.length}] Error: ${error.message} (${Date.now() - startTime}ms)`);
                                 }
                             })),
                             new Promise((_, reject) => 
@@ -128,6 +129,7 @@ async function scrapeNews(dateStr) {
                         console.log('⚠️ ' + error.message);
                     }
                     
+                    console.log(`✨ Scraping completado en ${Date.now() - totalStartTime}ms`);
                     return { news, isUpdated: true };
                 }
             } catch (error) {
