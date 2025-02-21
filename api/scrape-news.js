@@ -14,6 +14,13 @@ module.exports = async (req, res) => {
         return;
     }
     
-    // Respuesta temporal para debug
-    res.json({ test: 'API funcionando', timestamp: new Date().toISOString() });
+    try {
+        console.log('API: Iniciando scraping');
+        const news = await scrapeNews();
+        console.log('API: Scraping completado');
+        res.json(news);
+    } catch (error) {
+        console.error('API Error:', error);
+        res.status(500).json({ error: error.message });
+    }
 }; 
