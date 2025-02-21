@@ -4,6 +4,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.1.3",
     "axios": "^1.7.9",
-    "cheerio": "^1.0.0"
+    "cheerio": "1.0.0-rc.12",
+    "whatwg-mimetype": "^3.0.0"
   }
 }
