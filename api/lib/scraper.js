@@ -21,7 +21,6 @@ async function getTechCrunchImage(url) {
 async function scrapeNews(dateStr) {
     try {
         console.log('Iniciando scraping de TLDR.tech...');
-        console.log('Fecha recibida:', dateStr);
         
         // Si no se proporciona fecha, empezar con la fecha actual
         let currentDate = dateStr 
@@ -29,13 +28,12 @@ async function scrapeNews(dateStr) {
             : new Date();
             
         let attempts = 0;
-        const maxAttempts = 3; // Reducir a 3 días
+        const maxAttempts = 3;
         
         while (attempts < maxAttempts) {
             try {
                 console.log(`Intento ${attempts + 1} de ${maxAttempts}`);
-                // Formatear la fecha en YYYY-MM-DD usando la zona horaria española
-                const formattedDate = currentDate.toLocaleDateString('en-CA', { // en-CA da formato YYYY-MM-DD
+                const formattedDate = currentDate.toLocaleDateString('en-CA', {
                     timeZone: 'Europe/Madrid'
                 });
                 
@@ -44,21 +42,19 @@ async function scrapeNews(dateStr) {
                 
                 const response = await axios.get(url, {
                     headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                     },
-                    maxRedirects: 0
+                    timeout: 5000 // Añadir timeout de 5 segundos
                 });
                 
                 const $ = cheerio.load(response.data);
                 const news = [];
-                const newsPromises = [];
 
                 if ($('h1').text().includes('Keep up with tech in 5 minutes')) {
                     throw new Error('Página principal detectada');
                 }
 
-                // Recolectar todas las noticias primero
+                // Procesar noticias de forma secuencial
                 $('a').each((i, element) => {
                     const title = $(element).text().trim();
                     const text = $(element).parent().text().trim().replace(title, '').trim();
@@ -70,36 +66,34 @@ async function scrapeNews(dateStr) {
                         
                         const cleanTitle = title.replace(/\(\d+ minute read\)/g, '').trim();
                         
-                        // Crear una promesa para cada noticia
-                        const newsPromise = (async () => {
-                            let imageUrl = null;
-                            if (link && link.includes('techcrunch.com')) {
-                                imageUrl = await getTechCrunchImage(link);
-                                console.log(`Imagen obtenida para ${cleanTitle}:`, imageUrl);
-                            }
-
-                            return {
-                                category: currentDate.toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                }),
-                                title: cleanTitle,
-                                text,
-                                link,
-                                image: imageUrl
-                            };
-                        })();
-
-                        newsPromises.push(newsPromise);
+                        // Añadir la noticia inmediatamente sin imagen
+                        news.push({
+                            category: currentDate.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            }),
+                            title: cleanTitle,
+                            text,
+                            link
+                        });
                     }
                 });
 
-                // Esperar a que todas las promesas se resuelvan
-                const newsItems = await Promise.all(newsPromises.slice(0, 5)); // Máximo 5 imágenes
-                news.push(...newsItems);
-
+                // Si tenemos noticias, intentar obtener imágenes solo para las primeras 3
                 if (news.length > 0) {
+                    const techCrunchArticles = news
+                        .filter(item => item.link && item.link.includes('techcrunch.com'))
+                        .slice(0, 3);
+                    
+                    for (const article of techCrunchArticles) {
+                        try {
+                            article.image = await getTechCrunchImage(article.link);
+                        } catch (error) {
+                            console.log(`Error obteniendo imagen para ${article.title}:`, error.message);
+                        }
+                    }
+                    
                     return { news, isUpdated: true };
                 }
             } catch (error) {
