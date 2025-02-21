@@ -1,14 +1,15 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" }
+    { 
+      "src": "api/**/*.js", 
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30
+      }
+    }
   ],
   "routes": [
-    { "src": "/api/scrape-news", "dest": "/api/scrape-news.js" }
-  ],
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 30
-    }
-  }
+    { "src": "/api/(.*)", "dest": "/api/$1" }
+  ]
 }
