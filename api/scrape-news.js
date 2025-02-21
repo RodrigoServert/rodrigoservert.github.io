@@ -1,7 +1,12 @@
 const { scrapeNews } = require('./lib/scraper');
 
 module.exports = async (req, res) => {
-    console.log('API: Endpoint llamado');
+    console.log('API: Iniciando endpoint', {
+        method: req.method,
+        url: req.url,
+        timestamp: new Date().toISOString(),
+        headers: req.headers
+    });
     
     // Configurar CORS
     res.setHeader('Access-Control-Allow-Origin', '*');

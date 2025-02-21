@@ -126,21 +126,23 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function fetchScrapedNews() {
         try {
-            console.log('Intentando fetch a:', 'https://rodrigoservert-github-io.vercel.app/api/scrape-news');
+            console.log('Frontend: Iniciando fetch de noticias');
             const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news', {
                 mode: 'cors',
                 credentials: 'omit',
+                cache: 'no-store', // Forzar petición fresca
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-            console.log('Respuesta recibida:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
-            console.log('Noticias scrapeadas:', data);
             return data;
         } catch (error) {
             console.error('Error fetching scraped news:', error);
-            return newsGroups[0]; // Fallback a noticias estáticas
+            throw error; // Re-lanzar el error para manejarlo arriba
         }
     }
 
