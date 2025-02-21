@@ -10,7 +10,11 @@
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" }
+    { 
+      "src": "/api/scrape-news",
+      "methods": ["GET", "OPTIONS"],
+      "dest": "api/scrape-news.js"
+    }
   ],
   "github": {
     "silent": false
