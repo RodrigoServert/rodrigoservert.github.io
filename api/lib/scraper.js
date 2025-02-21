@@ -107,14 +107,17 @@ async function scrapeNews(dateStr) {
                         .filter(item => item.link && item.link.includes('techcrunch.com'))
                         .slice(0, 3);
                     
-                    // Procesar imágenes con Promise.race para manejar timeout
+                    console.log(`Encontrados ${techCrunchArticles.length} artículos de TechCrunch`);
+                    
                     try {
                         await Promise.race([
                             Promise.all(techCrunchArticles.map(async article => {
+                                const startTime = Date.now();
                                 try {
                                     article.image = await getTechCrunchImage(article.link);
+                                    console.log(`Imagen para "${article.title}": ${article.image ? 'OK' : 'No encontrada'} (${Date.now() - startTime}ms)`);
                                 } catch (error) {
-                                    console.log(`Error obteniendo imagen para ${article.title}:`, error.message);
+                                    console.log(`Error obteniendo imagen para "${article.title}" (${Date.now() - startTime}ms):`, error.message);
                                 }
                             })),
                             new Promise((_, reject) => 
@@ -122,7 +125,7 @@ async function scrapeNews(dateStr) {
                             )
                         ]);
                     } catch (error) {
-                        console.log('Timeout o error procesando imágenes:', error.message);
+                        console.log('⚠️ ' + error.message);
                     }
                     
                     return { news, isUpdated: true };
