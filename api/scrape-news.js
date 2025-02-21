@@ -1,3 +1,5 @@
+const { scrapeNews } = require('./lib/scraper');
+
 module.exports = async (req, res) => {
     console.log('API: Endpoint llamado');
     
@@ -12,12 +14,16 @@ module.exports = async (req, res) => {
         return;
     }
     
-    // Respuesta de prueba
-    res.json({
-        test: true,
-        timestamp: new Date().toISOString(),
-        news: getDefaultNews().news
-    });
+    // Usar el scraper real en lugar de noticias de prueba
+    try {
+        const result = await scrapeNews();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ 
+            error: 'Error obteniendo noticias',
+            message: error.message 
+        });
+    }
 };
 
 // Función temporal para noticias por defecto

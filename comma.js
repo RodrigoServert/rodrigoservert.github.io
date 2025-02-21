@@ -119,8 +119,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     ];
 
-    let currentGroupIndex = 0;
-
     const loadNewsItem = (item) => {
         const wrapper = item.querySelector('.news-content-wrapper');
         wrapper.style.opacity = 1;
