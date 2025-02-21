@@ -1,12 +1,8 @@
 const { scrapeNews } = require('./lib/scraper');
 
 module.exports = async (req, res) => {
-    console.log('API: Módulo cargado');
-    console.log('API: Dependencias disponibles:', {
-        axios: require('axios') ? 'Sí' : 'No',
-        cheerio: require('cheerio') ? 'Sí' : 'No'
-    });
-
+    console.log('API: Endpoint llamado');
+    
     // Configurar CORS
     res.setHeader('Access-Control-Allow-Origin', 'https://rodrigoservert.github.io');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -18,17 +14,6 @@ module.exports = async (req, res) => {
         return;
     }
     
-    try {
-        console.log('API: Iniciando scrape-news');
-        const date = req.query.date;
-        console.log('API: Fecha recibida:', date);
-        
-        const news = await scrapeNews(date);
-        console.log('API: Scraping completado');
-        
-        res.json(news);
-    } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({ error: error.message });
-    }
+    // Respuesta temporal para debug
+    res.json({ test: 'API funcionando', timestamp: new Date().toISOString() });
 }; 
