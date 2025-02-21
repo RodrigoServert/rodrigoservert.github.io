@@ -107,21 +107,24 @@ async function scrapeNews(dateStr) {
                         .filter(item => item.link && item.link.includes('techcrunch.com'))
                         .slice(0, 3);
                     
-                    // Procesar imágenes con un límite de tiempo total
-                    const imageTimeout = setTimeout(() => {
-                        console.log('Timeout alcanzado procesando imágenes');
-                        return { news, isUpdated: true };
-                    }, 5000);
-                    
-                    for (const article of techCrunchArticles) {
-                        try {
-                            article.image = await getTechCrunchImage(article.link);
-                        } catch (error) {
-                            console.log(`Error obteniendo imagen para ${article.title}:`, error.message);
-                        }
+                    // Procesar imágenes con Promise.race para manejar timeout
+                    try {
+                        await Promise.race([
+                            Promise.all(techCrunchArticles.map(async article => {
+                                try {
+                                    article.image = await getTechCrunchImage(article.link);
+                                } catch (error) {
+                                    console.log(`Error obteniendo imagen para ${article.title}:`, error.message);
+                                }
+                            })),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Timeout obteniendo imágenes')), 5000)
+                            )
+                        ]);
+                    } catch (error) {
+                        console.log('Timeout o error procesando imágenes:', error.message);
                     }
                     
-                    clearTimeout(imageTimeout);
                     return { news, isUpdated: true };
                 }
             } catch (error) {
