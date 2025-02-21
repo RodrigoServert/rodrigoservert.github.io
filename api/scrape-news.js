@@ -1,5 +1,3 @@
-const { scrapeNews } = require('./lib/scraper');
-
 module.exports = async (req, res) => {
     console.log('API: Endpoint llamado');
     
