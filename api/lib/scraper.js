@@ -23,26 +23,25 @@ async function scrapeNews(dateStr) {
         console.log('Iniciando scraping de TLDR.tech...');
         console.log('Fecha recibida:', dateStr);
         
-        // Si no se proporciona fecha, empezar con la fecha actual en zona horaria española
+        // Si no se proporciona fecha, empezar con la fecha actual
         let currentDate = dateStr 
             ? new Date(dateStr) 
-            : new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Madrid"}));
-            
-        console.log('Fecha procesada:', currentDate);
+            : new Date();
             
         let attempts = 0;
-        const maxAttempts = 7; // Máximo una semana atrás
+        const maxAttempts = 3; // Reducir a 3 días
         
         while (attempts < maxAttempts) {
-            // Formatear la fecha en YYYY-MM-DD usando la zona horaria española
-            const formattedDate = currentDate.toLocaleDateString('en-CA', { // en-CA da formato YYYY-MM-DD
-                timeZone: 'Europe/Madrid'
-            });
-            
-            const url = `https://tldr.tech/tech/${formattedDate}`;
-            console.log('Intentando con URL:', url);
-            
             try {
+                console.log(`Intento ${attempts + 1} de ${maxAttempts}`);
+                // Formatear la fecha en YYYY-MM-DD usando la zona horaria española
+                const formattedDate = currentDate.toLocaleDateString('en-CA', { // en-CA da formato YYYY-MM-DD
+                    timeZone: 'Europe/Madrid'
+                });
+                
+                const url = `https://tldr.tech/tech/${formattedDate}`;
+                console.log('Intentando con URL:', url);
+                
                 const response = await axios.get(url, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -97,7 +96,7 @@ async function scrapeNews(dateStr) {
                 });
 
                 // Esperar a que todas las promesas se resuelvan
-                const newsItems = await Promise.all(newsPromises);
+                const newsItems = await Promise.all(newsPromises.slice(0, 5)); // Máximo 5 imágenes
                 news.push(...newsItems);
 
                 if (news.length > 0) {
@@ -111,7 +110,7 @@ async function scrapeNews(dateStr) {
             attempts++;
         }
 
-        console.log('No se encontró una newsletter válida en los últimos 7 días');
+        console.log('No se encontró una newsletter válida en los últimos 3 días');
         return { news: getDefaultNews().news, isUpdated: false };
     } catch (error) {
         console.error('Error en scraping:', error.message);
