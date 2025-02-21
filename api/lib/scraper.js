@@ -21,6 +21,14 @@ async function getTechCrunchImage(url) {
 async function scrapeNews(dateStr) {
     try {
         console.log('Iniciando scraping de TLDR.tech...');
+        const startTime = Date.now();
+        
+        // Log de memoria inicial
+        const initialMemory = process.memoryUsage();
+        console.log('Memoria inicial:', {
+            heapUsed: Math.round(initialMemory.heapUsed / 1024 / 1024) + 'MB',
+            heapTotal: Math.round(initialMemory.heapTotal / 1024 / 1024) + 'MB'
+        });
         
         // Si no se proporciona fecha, empezar con la fecha actual
         let currentDate = dateStr 
@@ -33,6 +41,8 @@ async function scrapeNews(dateStr) {
         while (attempts < maxAttempts) {
             try {
                 console.log(`Intento ${attempts + 1} de ${maxAttempts}`);
+                console.log('Tiempo transcurrido:', Date.now() - startTime + 'ms');
+                
                 const formattedDate = currentDate.toLocaleDateString('en-CA', {
                     timeZone: 'Europe/Madrid'
                 });
@@ -47,7 +57,17 @@ async function scrapeNews(dateStr) {
                     timeout: 5000 // Añadir timeout de 5 segundos
                 });
                 
+                console.log('Respuesta de TLDR recibida en:', Date.now() - startTime + 'ms');
                 const $ = cheerio.load(response.data);
+                console.log('Cheerio cargado en:', Date.now() - startTime + 'ms');
+
+                // Log de memoria después de cargar Cheerio
+                const afterCheerioMemory = process.memoryUsage();
+                console.log('Memoria después de Cheerio:', {
+                    heapUsed: Math.round(afterCheerioMemory.heapUsed / 1024 / 1024) + 'MB',
+                    heapTotal: Math.round(afterCheerioMemory.heapTotal / 1024 / 1024) + 'MB'
+                });
+
                 const news = [];
 
                 if ($('h1').text().includes('Keep up with tech in 5 minutes')) {
