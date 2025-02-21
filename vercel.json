@@ -4,8 +4,7 @@
     { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/api/scrape-news", "dest": "/api/scrape-news.js" },
-    { "src": "/(.*)", "dest": "/api/scrape-news.js" }
+    { "src": "/api/scrape-news", "dest": "/api/scrape-news.js" }
   ],
   "functions": {
     "api/**/*.js": {
