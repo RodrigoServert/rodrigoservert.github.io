@@ -32,11 +32,10 @@ async function scrapeNews(dateStr) {
             heapTotal: Math.round(initialMemory.heapTotal / 1024 / 1024) + 'MB'
         });
         
-        // Si no se proporciona fecha, empezar con la fecha actual
-        let currentDate = dateStr 
-            ? new Date(dateStr) 
-            : new Date();
-            
+        // Obtener la fecha actual en formato YYYY-MM-DD
+        const currentDate = dateStr ? new Date(dateStr) : new Date();
+        const formattedDate = currentDate.toISOString().split('T')[0];
+        
         let attempts = 0;
         const maxAttempts = 3;
         
@@ -44,10 +43,6 @@ async function scrapeNews(dateStr) {
             try {
                 console.log(`Intento ${attempts + 1} de ${maxAttempts}`);
                 console.log('Tiempo transcurrido:', Date.now() - startTime + 'ms');
-                
-                const formattedDate = currentDate.toLocaleDateString('en-CA', {
-                    timeZone: 'Europe/Madrid'
-                });
                 
                 const url = `https://tldr.tech/tech/${formattedDate}`;
                 console.log('Intentando con URL:', url);
@@ -137,6 +132,7 @@ async function scrapeNews(dateStr) {
             }
 
             currentDate.setDate(currentDate.getDate() - 1);
+            formattedDate = currentDate.toISOString().split('T')[0];
             attempts++;
         }
 
