@@ -48,13 +48,15 @@ async function scrapeNews(dateStr) {
                 const $ = cheerio.load(response.data);
                 
                 // Mejor validación para detectar la página principal
-                if ($('title').text().includes('TLDR Newsletter') || 
-                    $('body').text().includes('Keep up with tech in 5 minutes a day')) {
-                    console.log(`URL ${url} redirige a página principal, probando con fecha anterior`);
+                const pageTitle = $('h1').text().trim();
+                console.log('Título de la página:', pageTitle);
+
+                if (pageTitle === 'Keep up with tech in 5 minutes') {
+                    console.log('Detectada página principal de TLDR, probando con fecha anterior');
                     throw new Error('Página principal detectada');
                 }
 
-                // Procesar noticias solo si no es la página principal
+                // Si llegamos aquí, es una newsletter válida
                 const news = [];
                 // Procesar noticias de forma secuencial
                 $('a').each((i, element) => {
