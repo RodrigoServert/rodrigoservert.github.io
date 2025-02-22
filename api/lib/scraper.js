@@ -31,73 +31,60 @@ async function scrapeNews(dateStr) {
         const maxAttempts = 7;
         
         while (attempts < maxAttempts) {
+            const formattedDate = currentDate.toISOString().split('T')[0];
+            const url = `https://tldr.tech/tech/${formattedDate}`;
+            
+            console.log(`Intento ${attempts + 1}/${maxAttempts} - URL: ${url}`);
+            
             try {
-                const formattedDate = currentDate.toISOString().split('T')[0];
-                const url = `https://tldr.tech/tech/${formattedDate}`;
-                
-                console.log(`\n[Intento ${attempts + 1}/${maxAttempts}] Probando URL: ${url}`);
-                
                 const response = await axios.get(url, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                     },
-                    timeout: 5000
+                    timeout: 3000 // Reducido a 3 segundos
                 });
                 
                 const $ = cheerio.load(response.data);
-                
-                // Verificar si es una newsletter válida
                 const pageTitle = $('h1').text().trim();
-                console.log('Título encontrado:', pageTitle);
-
+                
                 if (!pageTitle.includes('TLDR')) {
-                    console.log('❌ No es una newsletter válida (no contiene TLDR). Probando día anterior...');
+                    console.log('No es newsletter TLDR, probando fecha anterior');
                     currentDate.setDate(currentDate.getDate() - 1);
                     attempts++;
                     continue;
                 }
 
-                console.log('✅ Newsletter válida encontrada, procesando artículos...');
-                
+                console.log('Newsletter TLDR encontrada, procesando...');
                 const news = [];
                 
-                // Procesar cada artículo
-                $('h3').each((i, element) => {
-                    const title = $(element).text().trim();
-                    const link = $(element).find('a').attr('href');
-                    const text = $(element).parent().find('div.newsletter-html').text().trim();
-                    
-                    console.log(`\nProcesando artículo ${i + 1}:`);
-                    console.log('- Título:', title);
-                    console.log('- Link:', link);
-                    console.log('- Texto encontrado:', text ? '✅' : '❌');
+                // Optimizamos la selección de artículos
+                $('h3').each((_, element) => {
+                    const $article = $(element);
+                    const title = $article.text().trim();
+                    const link = $article.find('a').attr('href');
+                    const text = $article.parent().find('div.newsletter-html').text().trim();
                     
                     if (title && text) {
-                        news.push({
-                            category: 'Tech',
-                            title,
-                            text,
-                            link
-                        });
+                        news.push({ category: 'Tech', title, text, link });
                     }
                 });
 
                 if (news.length > 0) {
-                    console.log(`\n✅ Éxito! Encontrados ${news.length} artículos`);
+                    console.log(`Procesados ${news.length} artículos`);
                     return { news, isUpdated: true };
-                } else {
-                    console.log('\n❌ No se encontraron artículos en esta página');
                 }
 
             } catch (error) {
-                console.log(`Error con fecha ${formattedDate}:`, error.message);
-                currentDate.setDate(currentDate.getDate() - 1);
-                attempts++;
+                console.log(`Error: ${error.message}`);
             }
+            
+            currentDate.setDate(currentDate.getDate() - 1);
+            attempts++;
         }
 
-        console.log('\n❌ No se encontró una newsletter válida en los últimos 7 días');
+        console.log('No se encontró newsletter válida');
         return { news: getDefaultNews().news, isUpdated: false };
+        
     } catch (error) {
         console.error('Error en scraping:', error);
         return { news: getDefaultNews().news, isUpdated: false };
