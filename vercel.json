@@ -12,7 +12,7 @@
   "routes": [
     { 
       "src": "/api/scrape-news",
-      "methods": ["GET", "OPTIONS"],
+      "methods": ["GET", "POST", "OPTIONS"],
       "dest": "api/scrape-news.js"
     }
   ],

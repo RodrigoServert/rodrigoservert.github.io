@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchScrapedNews() {
         try {
             console.log('Frontend: Iniciando fetch de noticias');
-            const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news', {
+            const response = await fetch('/api/scrape-news', {
                 mode: 'cors',
                 credentials: 'omit',
                 cache: 'no-store', // Forzar petición fresca
