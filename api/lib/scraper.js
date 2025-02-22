@@ -1,6 +1,38 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+// Noticias por defecto
+function getDefaultNews() {
+    return {
+        news: [
+            {
+                category: "Technology",
+                title: "Apple's Vision Pro Launches Globally 🥽",
+                text: "Apple's mixed reality headset is now available worldwide, marking a significant milestone in consumer AR/VR technology.",
+                link: "https://www.apple.com/vision-pro"
+            },
+            {
+                category: "AI",
+                title: "Claude 3 Sets New AI Benchmark 🤖",
+                text: "Anthropic's latest AI model demonstrates unprecedented capabilities in reasoning and safety features.",
+                link: "https://www.anthropic.com"
+            },
+            {
+                category: "Innovation",
+                title: "SpaceX's Starship Completes Full Flight 🚀",
+                text: "The latest test of SpaceX's Starship successfully demonstrated all flight phases, including reentry.",
+                link: "https://www.spacex.com"
+            },
+            {
+                category: "Tech",
+                title: "EU Passes Landmark AI Regulation 🇪🇺",
+                text: "The European Union has approved comprehensive AI regulations, setting global standards for AI development.",
+                link: "https://ec.europa.eu"
+            }
+        ]
+    };
+}
+
 async function getTechCrunchImage(url) {
     try {
         const response = await axios.get(url, {
@@ -144,21 +176,9 @@ async function scrapeNews() {
         
     } catch (error) {
         console.error('Error en scraping:', error);
+        console.log('Retornando noticias por defecto debido a error');
         return { news: getDefaultNews().news, isUpdated: false };
     }
-}
-
-function getDefaultNews() {
-    return {
-        "news": [
-            {
-                "category": "Technology",
-                "title": "Apple Reveals New iPhone 16 📱",
-                "text": "Apple unveiled its latest smartphone, the iPhone 16, at its annual fall event. The new phone features a larger display, improved camera system, and faster processor."
-            },
-            // ... resto de noticias por defecto ...
-        ]
-    };
 }
 
 // Mapear categorías de TLDR a nuestras categorías
@@ -174,4 +194,4 @@ function mapCategory(tldrCategory) {
     return categoryMap[tldrCategory] || 'Technology';
 }
 
-module.exports = { scrapeNews }; 
+module.exports = { scrapeNews, getDefaultNews }; 
