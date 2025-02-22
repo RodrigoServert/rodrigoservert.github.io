@@ -72,6 +72,13 @@ async function scrapeNews() {
                 // Si llegamos aquí, tenemos una newsletter válida
                 console.log('Newsletter válida encontrada, procesando artículos...');
                 
+                // Debug: Verificar estructura HTML
+                console.log('Estructura de artículos:', {
+                    totalArticles: $('.article').length,
+                    hasH3: $('.article h3').length,
+                    hasNewsletterHtml: $('.article .newsletter-html').length
+                });
+                
                 const news = [];
                 
                 // Procesar cada artículo
@@ -80,6 +87,14 @@ async function scrapeNews() {
                     const link = $(element).find('h3 a').attr('href');
                     const text = $(element).find('.newsletter-html').text().trim();
                     
+                    // Debug: Verificar datos extraídos
+                    console.log('Datos extraídos:', {
+                        title,
+                        link,
+                        textLength: text?.length,
+                        rawHtml: $(element).html().substring(0, 100) + '...'
+                    });
+
                     if (title && text) {
                         const newsItem = {
                             category: 'Tech',
