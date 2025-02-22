@@ -46,28 +46,34 @@ async function scrapeNews(dateStr) {
                 
                 const $ = cheerio.load(response.data);
                 
-                // Validación de página principal
+                // 1. Verificar si es una newsletter válida por el H1
                 const pageTitle = $('h1').text().trim();
                 console.log('Título de la página:', pageTitle);
 
-                if (pageTitle === 'Keep up with tech in 5 minutes') {
-                    console.log('Detectada página principal, probando con fecha anterior');
+                if (!pageTitle.includes('TLDR')) {
+                    console.log('No es una newsletter válida, probando con fecha anterior');
                     currentDate.setDate(currentDate.getDate() - 1);
                     attempts++;
                     continue;
                 }
 
-                // Si llegamos aquí, tenemos una newsletter válida
-                console.log('Newsletter válida encontrada, procesando contenido...');
+                // 2. Si llegamos aquí, es una newsletter válida
+                console.log('Newsletter válida encontrada, procesando artículos...');
                 
                 const news = [];
                 
-                // Procesar cada artículo de la newsletter
+                // 3. Procesar cada artículo que tenga h3
                 $('h3').each((i, element) => {
                     const title = $(element).text().trim();
-                    const articleContainer = $(element).parent();
-                    const text = articleContainer.find('p').text().trim();
-                    const link = articleContainer.find('a').attr('href');
+                    
+                    // Ignorar artículos con "Sponsor"
+                    if (title.toLowerCase().includes('sponsor')) {
+                        console.log('Ignorando artículo patrocinado:', title);
+                        return;
+                    }
+                    
+                    const link = $(element).find('a').attr('href') || $(element).parent().find('a').attr('href');
+                    const text = $(element).parent().find('div.newsletter-html').text().trim();
                     
                     if (title && text) {
                         news.push({
@@ -76,21 +82,20 @@ async function scrapeNews(dateStr) {
                             text,
                             link
                         });
-                        console.log('Encontrado artículo:', { title });
+                        console.log('Artículo procesado:', { title });
                     }
                 });
 
                 if (news.length > 0) {
-                    console.log(`Encontrados ${news.length} artículos`);
-                    return { news, isUpdated: true }; // Retornamos inmediatamente al encontrar artículos
+                    console.log(`Encontrados ${news.length} artículos válidos`);
+                    return { news, isUpdated: true };
                 }
 
             } catch (error) {
                 console.log(`Error con fecha ${formattedDate}:`, error.message);
+                currentDate.setDate(currentDate.getDate() - 1);
+                attempts++;
             }
-
-            currentDate.setDate(currentDate.getDate() - 1);
-            attempts++;
         }
 
         console.log('No se encontró una newsletter válida en los últimos 7 días');
