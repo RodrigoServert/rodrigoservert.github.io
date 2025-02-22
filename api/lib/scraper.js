@@ -69,8 +69,6 @@ async function scrapeNews(dateStr) {
                     const text = articleContainer.find('p').text().trim();
                     const link = articleContainer.find('a').attr('href');
                     
-                    console.log('Encontrado artículo:', { title, text: text.substring(0, 50) + '...' });
-                    
                     if (title && text) {
                         news.push({
                             category: 'Tech',
@@ -78,14 +76,13 @@ async function scrapeNews(dateStr) {
                             text,
                             link
                         });
+                        console.log('Encontrado artículo:', { title });
                     }
                 });
 
                 if (news.length > 0) {
                     console.log(`Encontrados ${news.length} artículos`);
-                    return { news, isUpdated: true };
-                } else {
-                    console.log('No se encontraron artículos. HTML de la página:', $.html().substring(0, 500));
+                    return { news, isUpdated: true }; // Retornamos inmediatamente al encontrar artículos
                 }
 
             } catch (error) {
