@@ -23,59 +23,39 @@ async function scrapeNews(dateStr) {
     try {
         const totalStartTime = Date.now();
         console.log('Iniciando scraping de TLDR.tech...');
-        const startTime = Date.now();
         
-        // Log de memoria inicial
-        const initialMemory = process.memoryUsage();
-        console.log('Memoria inicial:', {
-            heapUsed: Math.round(initialMemory.heapUsed / 1024 / 1024) + 'MB',
-            heapTotal: Math.round(initialMemory.heapTotal / 1024 / 1024) + 'MB'
-        });
-        
-        // Si no se proporciona fecha, empezar con la fecha actual
         let currentDate = dateStr 
             ? new Date(dateStr) 
             : new Date();
             
         let attempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 7; // Aumentamos a 7 días
         
         while (attempts < maxAttempts) {
             try {
-                console.log(`Intento ${attempts + 1} de ${maxAttempts}`);
-                console.log('Tiempo transcurrido:', Date.now() - startTime + 'ms');
-                
-                const formattedDate = currentDate.toLocaleDateString('en-CA', {
-                    timeZone: 'Europe/Madrid'
-                });
-                
+                const formattedDate = currentDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
                 const url = `https://tldr.tech/tech/${formattedDate}`;
-                console.log('Intentando con URL:', url);
+                
+                console.log(`Intento ${attempts + 1}/${maxAttempts} con URL: ${url}`);
                 
                 const response = await axios.get(url, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                     },
-                    timeout: 5000 // Añadir timeout de 5 segundos
+                    timeout: 5000
                 });
                 
-                console.log('Respuesta de TLDR recibida en:', Date.now() - startTime + 'ms');
                 const $ = cheerio.load(response.data);
-                console.log('Cheerio cargado en:', Date.now() - startTime + 'ms');
-
-                // Log de memoria después de cargar Cheerio
-                const afterCheerioMemory = process.memoryUsage();
-                console.log('Memoria después de Cheerio:', {
-                    heapUsed: Math.round(afterCheerioMemory.heapUsed / 1024 / 1024) + 'MB',
-                    heapTotal: Math.round(afterCheerioMemory.heapTotal / 1024 / 1024) + 'MB'
-                });
-
-                const news = [];
-
-                if ($('h1').text().includes('Keep up with tech in 5 minutes')) {
+                
+                // Mejor validación para detectar la página principal
+                if ($('title').text().includes('TLDR Newsletter') || 
+                    $('body').text().includes('Keep up with tech in 5 minutes a day')) {
+                    console.log(`URL ${url} redirige a página principal, probando con fecha anterior`);
                     throw new Error('Página principal detectada');
                 }
 
+                // Procesar noticias solo si no es la página principal
+                const news = [];
                 // Procesar noticias de forma secuencial
                 $('a').each((i, element) => {
                     const title = $(element).text().trim();
@@ -136,14 +116,15 @@ async function scrapeNews(dateStr) {
                 console.log(`Error con fecha ${formattedDate}:`, error.message);
             }
 
+            // Restar un día y continuar
             currentDate.setDate(currentDate.getDate() - 1);
             attempts++;
         }
 
-        console.log('No se encontró una newsletter válida en los últimos 3 días');
+        console.log('No se encontró una newsletter válida en los últimos 7 días');
         return { news: getDefaultNews().news, isUpdated: false };
     } catch (error) {
-        console.error('Error en scraping:', error.message);
+        console.error('Error en scraping:', error);
         return { news: getDefaultNews().news, isUpdated: false };
     }
 }
