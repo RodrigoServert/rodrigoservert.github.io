@@ -33,45 +33,58 @@ async function scrapeNews(dateStr) {
             const url = `https://tldr.tech/tech/${formattedDate}`;
             
             try {
-                const browser = await puppeteer.launch({
-                    headless: 'new',
-                    args: ['--no-sandbox']
+                const response = await axios.get(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    },
+                    timeout: 3000
                 });
-                const page = await browser.newPage();
-                await page.goto(url, { waitUntil: 'networkidle0' });
                 
-                // Esperar a que el contenido se cargue
-                await page.waitForSelector('article', { timeout: 5000 });
+                const $ = cheerio.load(response.data);
+                const pageTitle = $('h1').text().trim();
                 
-                const articles = await page.evaluate(() => {
-                    const news = [];
-                    document.querySelectorAll('article').forEach(article => {
-                        const titleElement = article.querySelector('h3');
-                        const contentElement = article.querySelector('.newsletter-html');
-                        
-                        if (titleElement && contentElement) {
-                            news.push({
-                                category: 'Tech',
-                                title: titleElement.textContent.trim(),
-                                text: contentElement.textContent.trim(),
-                                link: article.querySelector('a')?.href || ''
-                            });
-                        }
-                    });
-                    return news;
+                console.log(`Título de la página: "${pageTitle}"`);
+
+                if (!pageTitle.includes('TLDR')) {
+                    console.log(`Fecha ${formattedDate}: No es newsletter TLDR`);
+                    currentDate.setDate(currentDate.getDate() - 1);
+                    attempts++;
+                    continue;
+                }
+
+                console.log(`Fecha ${formattedDate}: Newsletter TLDR encontrada`);
+                const news = [];
+                
+                // Buscar todos los artículos
+                $('article').each((_, element) => {
+                    const title = $(element).find('h3').text().trim();
+                    const link = $(element).find('a').attr('href');
+                    const text = $(element).find('.newsletter-html').text().trim();
+                    
+                    console.log('Artículo encontrado:');
+                    console.log('- Título:', title);
+                    console.log('- Link:', link);
+                    console.log('- Texto (primeros 50 chars):', text.substring(0, 50));
+                    
+                    if (title && text) {
+                        news.push({ 
+                            category: 'Tech',
+                            title,
+                            text,
+                            link
+                        });
+                    }
                 });
 
-                await browser.close();
-                
-                if (articles.length > 0) {
-                    console.log(`Encontrados ${articles.length} artículos para la fecha ${formattedDate}`);
-                    return { news: articles, isUpdated: true };
+                if (news.length > 0) {
+                    console.log(`Encontrados ${news.length} artículos`);
+                    return { news, isUpdated: true };
                 }
-                
-                console.log(`No se encontraron artículos para la fecha ${formattedDate}`);
+
+                console.log('No se encontraron artículos. Muestra del HTML:', $.html().substring(0, 200));
                 
             } catch (error) {
-                console.error(`Error al procesar la fecha ${formattedDate}:`, error);
+                console.log(`Error con fecha ${formattedDate}: ${error.message}`);
             }
             
             currentDate.setDate(currentDate.getDate() - 1);
