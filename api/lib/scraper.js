@@ -52,12 +52,14 @@ async function scrapeNews(dateStr) {
                 console.log(`Fecha ${formattedDate}: Newsletter TLDR encontrada`);
                 const news = [];
                 
-                // Buscar todos los artículos
-                $('h3').each((_, element) => {
-                    const title = $(element).text().trim();
-                    const link = $(element).find('a').attr('href');
-                    const newsletterHtml = $(element).parent().find('div.newsletter-html');
-                    const text = newsletterHtml.text().trim();
+                // Buscar todos los artículos usando el selector correcto
+                $('.article').each((_, element) => {
+                    const articleEl = $(element);
+                    const title = articleEl.find('h3').text().trim();
+                    const link = articleEl.find('h3 a').attr('href');
+                    const text = articleEl.find('.article-content').text().trim();
+                    
+                    console.log('Artículo encontrado:', { title: title.substring(0, 50) });
                     
                     if (title && text) {
                         news.push({ 
@@ -74,7 +76,7 @@ async function scrapeNews(dateStr) {
                     return { news, isUpdated: true };
                 }
 
-                console.log('No se encontraron artículos en esta newsletter');
+                console.log('No se encontraron artículos, HTML:', $.html().substring(0, 200));
                 
             } catch (error) {
                 console.log(`Error con fecha ${formattedDate}: ${error.message}`);
