@@ -63,10 +63,13 @@ async function scrapeNews(dateStr) {
                 const news = [];
                 
                 // Procesar cada artículo de la newsletter
-                $('.article').each((i, element) => {
-                    const title = $(element).find('h3').text().trim();
-                    const text = $(element).find('p').text().trim();
-                    const link = $(element).find('a').attr('href');
+                $('h3').each((i, element) => {
+                    const title = $(element).text().trim();
+                    const articleContainer = $(element).parent();
+                    const text = articleContainer.find('p').text().trim();
+                    const link = articleContainer.find('a').attr('href');
+                    
+                    console.log('Encontrado artículo:', { title, text: text.substring(0, 50) + '...' });
                     
                     if (title && text) {
                         news.push({
@@ -75,7 +78,6 @@ async function scrapeNews(dateStr) {
                             text,
                             link
                         });
-                        console.log('Artículo procesado:', { title });
                     }
                 });
 
@@ -83,7 +85,7 @@ async function scrapeNews(dateStr) {
                     console.log(`Encontrados ${news.length} artículos`);
                     return { news, isUpdated: true };
                 } else {
-                    console.log('No se encontraron artículos en la página');
+                    console.log('No se encontraron artículos. HTML de la página:', $.html().substring(0, 500));
                 }
 
             } catch (error) {
