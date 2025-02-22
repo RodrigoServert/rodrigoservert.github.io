@@ -176,31 +176,37 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Limpiar los skeletons antes de añadir las noticias reales
             newsColumns.forEach(column => column.innerHTML = '');
             
+            // Debug
+            console.log('Datos recibidos:', newsData);
+            
+            if (!newsData.news || newsData.news.length === 0) {
+                console.error('No hay noticias disponibles');
+                return;
+            }
+
+            // Distribuir las noticias equitativamente entre las columnas
             newsData.news.forEach((newsItem, index) => {
-                const column = newsColumns[index % 4];
+                // Asegurarnos de que usamos una columna válida
+                const columnIndex = index % newsColumns.length;
+                const column = newsColumns[columnIndex];
                 if (column) {
                     const articleTemplate = `
                         <article class="news-item">
                             <a href="${newsItem.link || '#'}" class="article-link" target="_blank" rel="noopener noreferrer">
                                 <div class="news-content-wrapper" style="opacity: 0; transition: opacity 0.5s ease;">
-                                    ${newsItem.image && newsItem.link && newsItem.link.includes('techcrunch.com') ? `
+                                    ${newsItem.image ? `
                                         <div class="news-image">
                                             <span class="news-category news-category-overlay">${newsItem.category}</span>
                                             <img src="${newsItem.image}" alt="${newsItem.title}" />
                                         </div>
-                                        <div class="news-content">
-                                            <h2 class="news-title">${newsItem.title}</h2>
-                                            <p class="news-text">${newsItem.text}</p>
+                                    ` : ''}
+                                    <div class="news-content">
+                                        <div class="news-header">
+                                            <span class="news-category">${newsItem.category}</span>
                                         </div>
-                                    ` : `
-                                        <div class="news-content">
-                                            <div class="news-header">
-                                                <span class="news-category">${newsItem.category}</span>
-                                            </div>
-                                            <h2 class="news-title">${newsItem.title}</h2>
-                                            <p class="news-text">${newsItem.text}</p>
-                                        </div>
-                                    `}
+                                        <h2 class="news-title">${newsItem.title}</h2>
+                                        <p class="news-text">${newsItem.text}</p>
+                                    </div>
                                 </div>
                             </a>
                         </article>
@@ -208,23 +214,51 @@ document.addEventListener('DOMContentLoaded', async function() {
                     column.innerHTML += articleTemplate;
                 }
             });
-            
-            document.querySelectorAll('.news-item').forEach(item => {
-                const observer = new IntersectionObserver(
-                    (entries) => {
-                        entries.forEach(entry => {
-                            if (entry.isIntersecting) {
-                                loadNewsItem(entry.target);
-                                observer.unobserve(entry.target);
-                            }
-                        });
-                    },
-                    { threshold: 0.1 }
-                );
-                observer.observe(item);
-            });
+
+            // Verificar que las noticias se han añadido
+            const totalArticles = document.querySelectorAll('.news-item').length;
+            console.log(`Total de artículos renderizados: ${totalArticles}`);
+
         } catch (error) {
             console.error('Error loading news:', error);
+            // Si hay error, mostrar las noticias por defecto
+            loadDefaultNews();
+        }
+    }
+
+    // Función para cargar noticias por defecto
+    function loadDefaultNews() {
+        try {
+            const newsColumns = document.querySelectorAll('.news-column');
+            const defaultNews = getDefaultNews().news;
+            
+            newsColumns.forEach(column => column.innerHTML = '');
+            
+            defaultNews.forEach((newsItem, index) => {
+                const columnIndex = index % newsColumns.length;
+                const column = newsColumns[columnIndex];
+                if (column) {
+                    // Usar el mismo template que arriba
+                    const articleTemplate = `
+                        <article class="news-item">
+                            <a href="${newsItem.link || '#'}" class="article-link" target="_blank" rel="noopener noreferrer">
+                                <div class="news-content-wrapper" style="opacity: 1;">
+                                    <div class="news-content">
+                                        <div class="news-header">
+                                            <span class="news-category">${newsItem.category}</span>
+                                        </div>
+                                        <h2 class="news-title">${newsItem.title}</h2>
+                                        <p class="news-text">${newsItem.text}</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </article>
+                    `;
+                    column.innerHTML += articleTemplate;
+                }
+            });
+        } catch (error) {
+            console.error('Error loading default news:', error);
         }
     }
 
