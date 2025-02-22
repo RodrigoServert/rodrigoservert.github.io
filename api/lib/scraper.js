@@ -24,76 +24,79 @@ async function scrapeNews(dateStr) {
     try {
         console.log('Iniciando scraping de TLDR.tech...');
         
-        let currentDate = dateStr ? new Date(dateStr) : new Date();
+        let currentDate = dateStr 
+            ? new Date(dateStr) 
+            : new Date();
+            
         let attempts = 0;
         const maxAttempts = 7;
         
         while (attempts < maxAttempts) {
-            const formattedDate = currentDate.toISOString().split('T')[0];
-            const url = `https://tldr.tech/tech/${formattedDate}`;
-            
             try {
+                const formattedDate = currentDate.toISOString().split('T')[0];
+                const url = `https://tldr.tech/tech/${formattedDate}`;
+                
+                console.log(`Intento ${attempts + 1}/${maxAttempts} con URL: ${url}`);
+                
                 const response = await axios.get(url, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
                     },
-                    timeout: 3000
+                    timeout: 5000
                 });
                 
                 const $ = cheerio.load(response.data);
-                const pageTitle = $('h1').text().trim();
                 
-                console.log(`Título de la página: "${pageTitle}"`);
+                // Validación de página principal
+                const pageTitle = $('h1').text().trim();
+                console.log('Título de la página:', pageTitle);
 
-                if (!pageTitle.includes('TLDR')) {
-                    console.log(`Fecha ${formattedDate}: No es newsletter TLDR`);
+                if (pageTitle === 'Keep up with tech in 5 minutes') {
+                    console.log('Detectada página principal, probando con fecha anterior');
                     currentDate.setDate(currentDate.getDate() - 1);
                     attempts++;
                     continue;
                 }
 
-                console.log(`Fecha ${formattedDate}: Newsletter TLDR encontrada`);
+                // Si llegamos aquí, tenemos una newsletter válida
+                console.log('Newsletter válida encontrada, procesando contenido...');
+                
                 const news = [];
                 
-                // Buscar todos los artículos
-                $('article').each((_, element) => {
+                // Procesar cada artículo de la newsletter
+                $('.article').each((i, element) => {
                     const title = $(element).find('h3').text().trim();
+                    const text = $(element).find('p').text().trim();
                     const link = $(element).find('a').attr('href');
-                    const text = $(element).find('.newsletter-html').text().trim();
-                    
-                    console.log('Artículo encontrado:');
-                    console.log('- Título:', title);
-                    console.log('- Link:', link);
-                    console.log('- Texto (primeros 50 chars):', text.substring(0, 50));
                     
                     if (title && text) {
-                        news.push({ 
+                        news.push({
                             category: 'Tech',
                             title,
                             text,
                             link
                         });
+                        console.log('Artículo procesado:', { title });
                     }
                 });
 
                 if (news.length > 0) {
                     console.log(`Encontrados ${news.length} artículos`);
                     return { news, isUpdated: true };
+                } else {
+                    console.log('No se encontraron artículos en la página');
                 }
 
-                console.log('No se encontraron artículos. Muestra del HTML:', $.html().substring(0, 200));
-                
             } catch (error) {
-                console.log(`Error con fecha ${formattedDate}: ${error.message}`);
+                console.log(`Error con fecha ${formattedDate}:`, error.message);
             }
-            
+
             currentDate.setDate(currentDate.getDate() - 1);
             attempts++;
         }
 
-        console.log('No se encontró una newsletter válida después de 7 intentos');
+        console.log('No se encontró una newsletter válida en los últimos 7 días');
         return { news: getDefaultNews().news, isUpdated: false };
-        
     } catch (error) {
         console.error('Error en scraping:', error);
         return { news: getDefaultNews().news, isUpdated: false };
