@@ -28,12 +28,17 @@ module.exports = async (req, res) => {
         console.log('4. Antes de scrapeNews');
         const result = await scrapeNews();
         console.log('5. Después de scrapeNews');
+        console.log('Resultado del scraping:', result);
         res.json(result);
     } catch (error) {
         console.log('X. Error capturado:', error);
-        res.status(500).json({ 
-            error: 'Error obteniendo noticias',
-            message: error.message 
+        // Importar getDefaultNews y usarlo aquí también
+        const { getDefaultNews } = require('./lib/scraper');
+        const defaultNews = getDefaultNews();
+        console.log('Enviando noticias por defecto');
+        res.status(200).json({ 
+            news: defaultNews.news,
+            isUpdated: false
         });
     }
 };
