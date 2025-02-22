@@ -51,32 +51,39 @@ async function scrapeNews(dateStr) {
                 console.log('Título de la página:', pageTitle);
 
                 if (pageTitle === 'Keep up with tech in 5 minutes') {
-                    console.log('Detectada página principal, probando con fecha anterior:', formattedDate);
+                    console.log('Detectada página principal, probando con fecha anterior');
                     currentDate.setDate(currentDate.getDate() - 1);
                     attempts++;
-                    continue; // Importante: continuar con la siguiente iteración
+                    continue;
                 }
 
-                // Si llegamos aquí, es una newsletter válida
+                // Si llegamos aquí, tenemos una newsletter válida
+                console.log('Newsletter válida encontrada, procesando contenido...');
+                
                 const news = [];
                 
-                // Procesar las noticias
-                $('article').each((i, element) => {
-                    const title = $(element).find('h2').text().trim();
+                // Procesar cada artículo de la newsletter
+                $('.article').each((i, element) => {
+                    const title = $(element).find('h3').text().trim();
                     const text = $(element).find('p').text().trim();
+                    const link = $(element).find('a').attr('href');
                     
                     if (title && text) {
                         news.push({
                             category: 'Tech',
                             title,
-                            text
+                            text,
+                            link
                         });
+                        console.log('Artículo procesado:', { title });
                     }
                 });
 
                 if (news.length > 0) {
-                    console.log(`Newsletter encontrada para fecha ${formattedDate} con ${news.length} noticias`);
+                    console.log(`Encontrados ${news.length} artículos`);
                     return { news, isUpdated: true };
+                } else {
+                    console.log('No se encontraron artículos en la página');
                 }
 
             } catch (error) {
