@@ -21,7 +21,6 @@ async function getTechCrunchImage(url) {
 
 async function scrapeNews(dateStr) {
     try {
-        const totalStartTime = Date.now();
         console.log('Iniciando scraping de TLDR.tech...');
         
         let currentDate = dateStr 
@@ -29,11 +28,11 @@ async function scrapeNews(dateStr) {
             : new Date();
             
         let attempts = 0;
-        const maxAttempts = 7; // Aumentamos a 7 días
+        const maxAttempts = 7;
         
         while (attempts < maxAttempts) {
             try {
-                const formattedDate = currentDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+                const formattedDate = currentDate.toISOString().split('T')[0];
                 const url = `https://tldr.tech/tech/${formattedDate}`;
                 
                 console.log(`Intento ${attempts + 1}/${maxAttempts} con URL: ${url}`);
@@ -47,78 +46,43 @@ async function scrapeNews(dateStr) {
                 
                 const $ = cheerio.load(response.data);
                 
-                // Mejor validación para detectar la página principal
+                // Validación de página principal
                 const pageTitle = $('h1').text().trim();
                 console.log('Título de la página:', pageTitle);
 
                 if (pageTitle === 'Keep up with tech in 5 minutes') {
-                    console.log('Detectada página principal de TLDR, probando con fecha anterior');
-                    throw new Error('Página principal detectada');
+                    console.log('Detectada página principal, probando con fecha anterior:', formattedDate);
+                    currentDate.setDate(currentDate.getDate() - 1);
+                    attempts++;
+                    continue; // Importante: continuar con la siguiente iteración
                 }
 
                 // Si llegamos aquí, es una newsletter válida
                 const news = [];
-                // Procesar noticias de forma secuencial
-                $('a').each((i, element) => {
-                    const title = $(element).text().trim();
-                    const text = $(element).parent().text().trim().replace(title, '').trim();
-                    const link = $(element).attr('href');
-
-                    if (title && text && 
-                        (title.includes('minute read') || title.includes('GitHub Repo')) && 
-                        !title.includes('Sponsor')) {
-                        
-                        const cleanTitle = title.replace(/\(\d+ minute read\)/g, '').trim();
-                        
-                        // Añadir la noticia inmediatamente sin imagen
+                
+                // Procesar las noticias
+                $('article').each((i, element) => {
+                    const title = $(element).find('h2').text().trim();
+                    const text = $(element).find('p').text().trim();
+                    
+                    if (title && text) {
                         news.push({
-                            category: currentDate.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
-                            }),
-                            title: cleanTitle,
-                            text,
-                            link
+                            category: 'Tech',
+                            title,
+                            text
                         });
                     }
                 });
 
-                // Si tenemos noticias, intentar obtener imágenes solo para las primeras 3
                 if (news.length > 0) {
-                    const techCrunchArticles = news
-                        .filter(item => item.link && item.link.includes('techcrunch.com'))
-                        .slice(0, 3);
-                    
-                    console.log(`🔍 Encontrados ${techCrunchArticles.length} artículos de TechCrunch para procesar`);
-                    
-                    try {
-                        await Promise.race([
-                            Promise.all(techCrunchArticles.map(async (article, index) => {
-                                const startTime = Date.now();
-                                try {
-                                    article.image = await getTechCrunchImage(article.link);
-                                    console.log(`📸 [${index + 1}/${techCrunchArticles.length}] Imagen: ${article.image ? '✅' : '❌'} (${Date.now() - startTime}ms)`);
-                                } catch (error) {
-                                    console.log(`❌ [${index + 1}/${techCrunchArticles.length}] Error: ${error.message} (${Date.now() - startTime}ms)`);
-                                }
-                            })),
-                            new Promise((_, reject) => 
-                                setTimeout(() => reject(new Error('Timeout obteniendo imágenes')), 5000)
-                            )
-                        ]);
-                    } catch (error) {
-                        console.log('⚠️ ' + error.message);
-                    }
-                    
-                    console.log(`✨ Scraping completado en ${Date.now() - totalStartTime}ms`);
+                    console.log(`Newsletter encontrada para fecha ${formattedDate} con ${news.length} noticias`);
                     return { news, isUpdated: true };
                 }
+
             } catch (error) {
                 console.log(`Error con fecha ${formattedDate}:`, error.message);
             }
 
-            // Restar un día y continuar
             currentDate.setDate(currentDate.getDate() - 1);
             attempts++;
         }
