@@ -53,6 +53,17 @@ async function scrapeNews() {
                 });
                 
                 const $ = cheerio.load(response.data);
+                // Debug: Ver URL final después de posibles redirecciones
+                console.log('URL final:', response.request.res.responseUrl);
+                
+                // Debug: Ver estructura general de la página
+                console.log('Elementos principales:', {
+                    bodyClasses: $('body').attr('class'),
+                    mainContent: $('#main-content').length,
+                    allH3: $('h3').length,
+                    pageHtml: response.data.substring(0, 500) + '...'
+                });
+                
                 const pageTitle = $('h1').text().trim();
                 
                 console.log('Título de la página:', pageTitle);
