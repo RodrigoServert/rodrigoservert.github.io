@@ -5,15 +5,23 @@
       "src": "api/**/*.js", 
       "use": "@vercel/node",
       "config": {
-        "maxDuration": 30
+        "maxDuration": 60
       }
     }
   ],
   "routes": [
-    { 
+    {
       "src": "/api/scrape-news",
-      "methods": ["GET", "OPTIONS"],
-      "dest": "api/scrape-news.js"
+      "methods": ["GET", "POST", "OPTIONS"],
+      "dest": "api/scrape-news.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
     }
   ],
   "github": {

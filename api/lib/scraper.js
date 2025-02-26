@@ -61,101 +61,156 @@ async function scrapeNews() {
     try {
         console.log('Iniciando scraping de TLDR.tech...');
         
-        // Empezar con la fecha actual
+        const headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        };
+
         const today = new Date();
-        const maxAttempts = 4; // Máximo 4 días hacia atrás
+        const maxAttempts = 4;
         
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            const targetDate = new Date(today);
-            targetDate.setDate(today.getDate() - attempt);
-            
-            // Formatear fecha como YYYY-MM-DD
-            const formattedDate = targetDate.toISOString().split('T')[0];
-            const url = `https://tldr.tech/tech/${formattedDate}`;
-            
-            console.log(`Intento ${attempt + 1}/${maxAttempts} con fecha: ${formattedDate}`);
-            
             try {
+                const targetDate = new Date(today);
+                targetDate.setDate(today.getDate() - attempt);
+                const formattedDate = targetDate.toISOString().split('T')[0];
+                const url = `https://tldr.tech/tech/${formattedDate}`;
+                
+                console.log(`\n=== Intento ${attempt + 1} ===`);
+                console.log(`Intentando scraping de: ${url}`);
+                
                 const response = await axios.get(url, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                    },
-                    timeout: 5000,
+                    headers,
+                    timeout: 10000, // Aumentar timeout a 10 segundos
                     maxRedirects: 5
                 });
+
+                console.log(`Respuesta recibida con status: ${response.status}`);
                 
-                const $ = cheerio.load(response.data);
-                // Debug: Ver URL final después de posibles redirecciones
-                console.log('URL final:', response.request.res.responseUrl);
+                // Guardar el HTML para depuración
+                const htmlContent = response.data;
+                console.log(`Longitud del HTML: ${htmlContent.length} caracteres`);
                 
-                // Debug: Ver estructura general de la página
-                console.log('Elementos principales:', {
-                    bodyClasses: $('body').attr('class'),
-                    mainContent: $('#main-content').length,
-                    allH3: $('h3').length,
-                    pageHtml: response.data.substring(0, 500) + '...'
-                });
-                
-                const pageTitle = $('h1').text().trim();
-                
-                console.log('Título de la página:', pageTitle);
-                
-                // Verificar si estamos en la home (redirección)
-                if (pageTitle === 'Keep up with tech in 5 minutes') {
-                    console.log('Detectada redirección a home, probando con fecha anterior');
+                // Verificar si la página contiene contenido relevante
+                if (!htmlContent.includes('TLDR Tech') && !htmlContent.includes('Big Tech & Startups')) {
+                    console.log('La página no parece contener una newsletter de TLDR Tech');
                     continue;
                 }
                 
-                // Verificar si es una newsletter válida (debe contener "TLDR")
-                if (!pageTitle.includes('TLDR')) {
-                    console.log('Página no válida, probando con fecha anterior');
-                    continue;
+                const $ = cheerio.load(htmlContent);
+                
+                // Detectar la estructura de la página
+                console.log('Analizando estructura de la página...');
+                
+                // Intentar diferentes selectores para encontrar las secciones
+                const possibleSectionSelectors = [
+                    'h3', // Selector original
+                    'h2', // Posible cambio a h2
+                    '.newsletter-section-title', // Posible clase específica
+                    'strong:contains("Big Tech")', // Texto en negrita
+                    'div.section-header' // Otro posible selector
+                ];
+                
+                let sectionSelector = '';
+                for (const selector of possibleSectionSelectors) {
+                    const elements = $(selector);
+                    console.log(`Selector "${selector}" encontró ${elements.length} elementos`);
+                    
+                    // Verificar si alguno de los elementos contiene texto de sección
+                    const hasSectionText = Array.from(elements).some(el => 
+                        $(el).text().includes('Big Tech') || 
+                        $(el).text().includes('Science') || 
+                        $(el).text().includes('Programming')
+                    );
+                    
+                    if (hasSectionText) {
+                        sectionSelector = selector;
+                        console.log(`Usando selector de sección: "${selector}"`);
+                        break;
+                    }
                 }
                 
-                // Si llegamos aquí, tenemos una newsletter válida
-                console.log('Newsletter válida encontrada, procesando artículos...');
+                if (!sectionSelector) {
+                    console.log('No se pudo determinar el selector de sección, usando h3 por defecto');
+                    sectionSelector = 'h3';
+                }
                 
-                // Debug: Verificar estructura HTML
-                console.log('Estructura de artículos:', {
-                    totalArticles: $('.article').length,
-                    hasH3: $('.article h3').length,
-                    hasNewsletterHtml: $('.article .newsletter-html').length
-                });
-                
+                // Seleccionar los artículos de las diferentes secciones
+                const sections = [
+                    '📱 Big Tech & Startups',
+                    '🚀 Science & Futuristic Technology',
+                    '💻 Programming, Design & Data Science',
+                    '🎁 Miscellaneous',
+                    '⚡ Quick Links'
+                ];
+
                 const news = [];
                 
-                // Procesar cada artículo
-                $('.article').each(async (i, element) => {
-                    const title = $(element).find('h3').text().trim();
-                    const link = $(element).find('h3 a').attr('href');
-                    const text = $(element).find('.newsletter-html').text().trim();
+                // Buscar secciones por texto aproximado
+                sections.forEach(sectionTitle => {
+                    console.log(`Buscando sección: "${sectionTitle}"`);
                     
-                    // Debug: Verificar datos extraídos
-                    console.log('Datos extraídos:', {
-                        title,
-                        link,
-                        textLength: text?.length,
-                        rawHtml: $(element).html().substring(0, 100) + '...'
+                    // Buscar elementos que contengan parte del título de la sección
+                    const sectionKeyword = sectionTitle.split(' ')[1]; // "Big", "Science", etc.
+                    const possibleSections = $(sectionSelector).filter(function() {
+                        return $(this).text().includes(sectionKeyword);
                     });
-
-                    if (title && text) {
-                        const newsItem = {
-                            category: 'Tech',
-                            title,
-                            text,
-                            link
-                        };
+                    
+                    if (possibleSections.length) {
+                        console.log(`Encontrada sección "${sectionKeyword}" con ${possibleSections.length} coincidencias`);
                         
-                        // Si es un artículo de TechCrunch, obtener la imagen
-                        if (link && link.includes('techcrunch.com')) {
-                            const image = await getTechCrunchImage(link);
-                            if (image) {
-                                newsItem.image = image;
-                            }
-                        }
-                        
-                        news.push(newsItem);
-                        console.log('Artículo procesado:', { title, hasImage: !!newsItem.image });
+                        possibleSections.each((i, section) => {
+                            // Obtener todos los artículos hasta la siguiente sección
+                            const articles = $(section).nextUntil(sectionSelector);
+                            console.log(`Encontrados ${articles.length} posibles artículos en sección ${sectionKeyword}`);
+                            
+                            articles.each((i, el) => {
+                                const article = $(el);
+                                
+                                // Intentar diferentes patrones para extraer artículos
+                                if (article.is('p') && article.text().trim()) {
+                                    // Patrón 1: Título (tiempo de lectura)
+                                    let titleMatch = article.text().match(/(.*?)\((.*?)\)/);
+                                    
+                                    // Patrón 2: Título sin tiempo de lectura
+                                    if (!titleMatch && article.find('strong').length) {
+                                        const title = article.find('strong').text().trim();
+                                        if (title) {
+                                            titleMatch = [null, title, ''];
+                                        }
+                                    }
+                                    
+                                    // Patrón 3: Título en negrita seguido de texto
+                                    if (!titleMatch && article.html() && article.html().includes('<strong>')) {
+                                        const strongText = article.find('strong').text().trim();
+                                        if (strongText) {
+                                            titleMatch = [null, strongText, ''];
+                                        }
+                                    }
+                                    
+                                    if (titleMatch) {
+                                        const title = titleMatch[1].trim();
+                                        const text = article.next('p').text().trim() || 
+                                                    article.text().replace(title, '').trim();
+                                        
+                                        if (title && text) {
+                                            news.push({
+                                                category: mapCategory(sectionKeyword),
+                                                title,
+                                                text,
+                                                link: '#'
+                                            });
+                                            console.log('Artículo procesado:', { title });
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                    } else {
+                        console.log(`No se encontró la sección "${sectionKeyword}"`);
                     }
                 });
                 
@@ -168,6 +223,10 @@ async function scrapeNews() {
                 
             } catch (error) {
                 console.log(`Error con fecha ${formattedDate}:`, error.message);
+                if (error.response) {
+                    console.log(`Status: ${error.response.status}`);
+                    console.log(`Headers:`, error.response.headers);
+                }
             }
         }
         
@@ -185,11 +244,15 @@ async function scrapeNews() {
 function mapCategory(tldrCategory) {
     const categoryMap = {
         'Tech': 'Technology',
+        'Big': 'Technology',
         'AI': 'Technology',
         'Science': 'Science',
-        'Product': 'Innovation',
-        'Webdev': 'Technology',
-        'Design': 'Arts'
+        'Futuristic': 'Science',
+        'Programming': 'Technology',
+        'Design': 'Arts',
+        'Data': 'Technology',
+        'Miscellaneous': 'Culture',
+        'Quick': 'Technology'
     };
     return categoryMap[tldrCategory] || 'Technology';
 }

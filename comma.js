@@ -127,7 +127,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchScrapedNews() {
         try {
             console.log('Frontend: Iniciando fetch de noticias');
-            const response = await fetch('https://rodrigoservert-github-io.vercel.app/api/scrape-news', {
+            
+            // Determinar la URL base según el entorno
+            let baseUrl;
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                baseUrl = 'http://localhost:3000';
+            } else {
+                // URL para producción (Vercel)
+                baseUrl = 'https://rodrigoservert-github-io.vercel.app';
+            }
+            
+            const apiUrl = `${baseUrl}/api/scrape-news`;
+            console.log('Usando URL de API:', apiUrl);
+            
+            const response = await fetch(apiUrl, {
                 mode: 'cors',
                 credentials: 'omit',
                 cache: 'no-store', // Forzar petición fresca
@@ -135,13 +148,23 @@ document.addEventListener('DOMContentLoaded', async function() {
                     'Content-Type': 'application/json'
                 }
             });
+            
             if (!response.ok) {
+                console.error(`Error HTTP: ${response.status} - ${response.statusText}`);
+                const errorText = await response.text();
+                console.error('Respuesta de error:', errorText);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
+            
             const data = await response.json();
+            console.log('Datos recibidos de la API:', data);
             return data;
         } catch (error) {
-            console.error('Error fetching scraped news:', error);
+            console.error('Error detallado al obtener noticias:', error);
+            // Mostrar un mensaje más descriptivo en la consola
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                console.error('Error de red: No se pudo conectar con el servidor. Verifica la URL y que el servidor esté en funcionamiento.');
+            }
             throw error; // Re-lanzar el error para manejarlo arriba
         }
     }
@@ -167,37 +190,37 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Primero mostrar los skeletons
             const newsColumns = document.querySelectorAll('.news-column');
             newsColumns.forEach(column => {
-                // Añadir 3 skeletons por columna
                 column.innerHTML = Array(3).fill(createSkeletonTemplate()).join('');
             });
 
             const newsData = await fetchScrapedNews();
             
-            // Limpiar los skeletons antes de añadir las noticias reales
+            // Limpiar los skeletons
             newsColumns.forEach(column => column.innerHTML = '');
             
-            // Debug
             console.log('Datos recibidos:', newsData);
             
-            if (!newsData.news || newsData.news.length === 0) {
-                console.error('No hay noticias disponibles');
+            if (!newsData || !newsData.news || newsData.news.length === 0) {
+                console.log('No hay noticias, cargando noticias por defecto');
+                loadDefaultNews();
                 return;
             }
 
-            // Distribuir las noticias equitativamente entre las columnas
+            // Distribuir las noticias equitativamente
+            const newsPerColumn = Math.ceil(newsData.news.length / newsColumns.length);
             newsData.news.forEach((newsItem, index) => {
-                // Asegurarnos de que usamos una columna válida
-                const columnIndex = index % newsColumns.length;
+                const columnIndex = Math.floor(index / newsPerColumn);
                 const column = newsColumns[columnIndex];
+                
                 if (column) {
                     const articleTemplate = `
                         <article class="news-item">
                             <a href="${newsItem.link || '#'}" class="article-link" target="_blank" rel="noopener noreferrer">
-                                <div class="news-content-wrapper" style="opacity: 0; transition: opacity 0.5s ease;">
+                                <div class="news-content-wrapper">
                                     ${newsItem.image ? `
                                         <div class="news-image">
                                             <span class="news-category news-category-overlay">${newsItem.category}</span>
-                                            <img src="${newsItem.image}" alt="${newsItem.title}" />
+                                            <img src="${newsItem.image}" alt="${newsItem.title}" loading="lazy" />
                                         </div>
                                     ` : ''}
                                     <div class="news-content">
@@ -215,13 +238,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             });
 
-            // Verificar que las noticias se han añadido
-            const totalArticles = document.querySelectorAll('.news-item').length;
-            console.log(`Total de artículos renderizados: ${totalArticles}`);
-
         } catch (error) {
             console.error('Error loading news:', error);
-            // Si hay error, mostrar las noticias por defecto
             loadDefaultNews();
         }
     }
