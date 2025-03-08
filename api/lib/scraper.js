@@ -59,183 +59,168 @@ async function getTechCrunchImage(url) {
 
 async function scrapeNews() {
     try {
-        console.log('Iniciando scraping de TLDR.tech...');
+        console.log('Iniciando scraping de TLDR.tech con URL fija...');
         
+        // URL fija proporcionada por el usuario
+        const fixedUrl = 'https://tldr.tech/tech/2025-02-21';
+        console.log(`Usando URL fija: ${fixedUrl}`);
+        
+        // Headers con User-Agent más moderno y completo
         const headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1'
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
         };
 
-        const today = new Date();
-        const maxAttempts = 4;
-        
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            try {
-                const targetDate = new Date(today);
-                targetDate.setDate(today.getDate() - attempt);
-                const formattedDate = targetDate.toISOString().split('T')[0];
-                const url = `https://tldr.tech/tech/${formattedDate}`;
+        try {
+            console.log(`Intentando acceder a: ${fixedUrl}`);
+            
+            const response = await axios.get(fixedUrl, {
+                headers,
+                timeout: 15000, // 15 segundos de timeout
+                maxRedirects: 5
+            });
+
+            console.log(`Respuesta recibida con status: ${response.status}`);
+            
+            // Guardar el HTML para depuración
+            const htmlContent = response.data;
+            console.log(`Longitud del HTML: ${htmlContent.length} caracteres`);
+            
+            // Guardar una muestra del HTML para inspección
+            const htmlSample = htmlContent.substring(0, 500) + '... [truncado]';
+            console.log('Muestra del HTML:', htmlSample);
+            
+            // Verificar si la página contiene contenido relevante
+            if (!htmlContent.includes('TLDR Tech') && !htmlContent.includes('Big Tech & Startups')) {
+                console.log('La página no parece contener una newsletter de TLDR Tech');
+                return { news: getDefaultNews().news, isUpdated: false };
+            }
+            
+            const $ = cheerio.load(htmlContent);
+            
+            console.log('Analizando estructura de la página...');
+            
+            // Buscar secciones específicas
+            const sections = [
+                { title: 'Big Tech & Startups', keyword: 'Big Tech' },
+                { title: 'Science & Futuristic Technology', keyword: 'Science' },
+                { title: 'Programming, Design & Data Science', keyword: 'Programming' },
+                { title: 'Miscellaneous', keyword: 'Miscellaneous' },
+                { title: 'Quick Links', keyword: 'Quick Links' }
+            ];
+            
+            const news = [];
+            
+            // Intentar diferentes selectores para encontrar las secciones
+            const possibleSectionSelectors = [
+                'h3', 'h2', 'h4', '.newsletter-section-title', 
+                'strong', 'div.section-header', '.title-container h3', 
+                '[data-testid="section-title"]'
+            ];
+            
+            // Probar cada selector
+            for (const selector of possibleSectionSelectors) {
+                console.log(`Probando selector: ${selector}`);
+                const elements = $(selector);
+                console.log(`Encontrados ${elements.length} elementos con selector ${selector}`);
                 
-                console.log(`\n=== Intento ${attempt + 1} ===`);
-                console.log(`Intentando scraping de: ${url}`);
-                
-                const response = await axios.get(url, {
-                    headers,
-                    timeout: 10000, // Aumentar timeout a 10 segundos
-                    maxRedirects: 5
+                // Mostrar los primeros 5 elementos para depuración
+                elements.slice(0, 5).each((i, el) => {
+                    console.log(`  Elemento ${i+1}: "${$(el).text().trim().substring(0, 50)}..."`);
                 });
-
-                console.log(`Respuesta recibida con status: ${response.status}`);
                 
-                // Guardar el HTML para depuración
-                const htmlContent = response.data;
-                console.log(`Longitud del HTML: ${htmlContent.length} caracteres`);
-                
-                // Verificar si la página contiene contenido relevante
-                if (!htmlContent.includes('TLDR Tech') && !htmlContent.includes('Big Tech & Startups')) {
-                    console.log('La página no parece contener una newsletter de TLDR Tech');
-                    continue;
-                }
-                
-                const $ = cheerio.load(htmlContent);
-                
-                // Detectar la estructura de la página
-                console.log('Analizando estructura de la página...');
-                
-                // Intentar diferentes selectores para encontrar las secciones
-                const possibleSectionSelectors = [
-                    'h3', // Selector original
-                    'h2', // Posible cambio a h2
-                    '.newsletter-section-title', // Posible clase específica
-                    'strong:contains("Big Tech")', // Texto en negrita
-                    'div.section-header' // Otro posible selector
-                ];
-                
-                let sectionSelector = '';
-                for (const selector of possibleSectionSelectors) {
-                    const elements = $(selector);
-                    console.log(`Selector "${selector}" encontró ${elements.length} elementos`);
-                    
-                    // Verificar si alguno de los elementos contiene texto de sección
-                    const hasSectionText = Array.from(elements).some(el => 
-                        $(el).text().includes('Big Tech') || 
-                        $(el).text().includes('Science') || 
-                        $(el).text().includes('Programming')
-                    );
-                    
-                    if (hasSectionText) {
-                        sectionSelector = selector;
-                        console.log(`Usando selector de sección: "${selector}"`);
-                        break;
-                    }
-                }
-                
-                if (!sectionSelector) {
-                    console.log('No se pudo determinar el selector de sección, usando h3 por defecto');
-                    sectionSelector = 'h3';
-                }
-                
-                // Seleccionar los artículos de las diferentes secciones
-                const sections = [
-                    '📱 Big Tech & Startups',
-                    '🚀 Science & Futuristic Technology',
-                    '💻 Programming, Design & Data Science',
-                    '🎁 Miscellaneous',
-                    '⚡ Quick Links'
-                ];
-
-                const news = [];
-                
-                // Buscar secciones por texto aproximado
-                sections.forEach(sectionTitle => {
-                    console.log(`Buscando sección: "${sectionTitle}"`);
-                    
-                    // Buscar elementos que contengan parte del título de la sección
-                    const sectionKeyword = sectionTitle.split(' ')[1]; // "Big", "Science", etc.
-                    const possibleSections = $(sectionSelector).filter(function() {
-                        return $(this).text().includes(sectionKeyword);
+                // Buscar secciones por sus títulos
+                for (const section of sections) {
+                    const sectionElements = elements.filter(function() {
+                        return $(this).text().includes(section.keyword);
                     });
                     
-                    if (possibleSections.length) {
-                        console.log(`Encontrada sección "${sectionKeyword}" con ${possibleSections.length} coincidencias`);
+                    if (sectionElements.length > 0) {
+                        console.log(`Encontrada sección "${section.title}" con selector ${selector}`);
                         
-                        possibleSections.each((i, section) => {
-                            // Obtener todos los artículos hasta la siguiente sección
-                            const articles = $(section).nextUntil(sectionSelector);
-                            console.log(`Encontrados ${articles.length} posibles artículos en sección ${sectionKeyword}`);
+                        sectionElements.each((i, sectionEl) => {
+                            // Obtener el contenido siguiente hasta la próxima sección
+                            let nextElements = $(sectionEl).nextUntil(selector);
+                            console.log(`  Encontrados ${nextElements.length} elementos siguientes`);
                             
-                            articles.each((i, el) => {
-                                const article = $(el);
+                            // Buscar artículos en los elementos siguientes
+                            nextElements.each((j, el) => {
+                                const element = $(el);
                                 
-                                // Intentar diferentes patrones para extraer artículos
-                                if (article.is('p') && article.text().trim()) {
-                                    // Patrón 1: Título (tiempo de lectura)
-                                    let titleMatch = article.text().match(/(.*?)\((.*?)\)/);
+                                // Si es un párrafo y contiene texto
+                                if ((element.is('p') || element.is('div')) && element.text().trim()) {
+                                    // Buscar título en negrita o al inicio del párrafo
+                                    let title = '';
+                                    let text = '';
                                     
-                                    // Patrón 2: Título sin tiempo de lectura
-                                    if (!titleMatch && article.find('strong').length) {
-                                        const title = article.find('strong').text().trim();
-                                        if (title) {
-                                            titleMatch = [null, title, ''];
+                                    // Caso 1: Título en negrita
+                                    const strongEl = element.find('strong').first();
+                                    if (strongEl.length) {
+                                        title = strongEl.text().trim();
+                                        // Texto es el resto del párrafo
+                                        text = element.text().replace(title, '').trim();
+                                    } 
+                                    // Caso 2: Título seguido de paréntesis (tiempo de lectura)
+                                    else {
+                                        const titleMatch = element.text().match(/(.*?)\s*\(\d+\s*minute read\)/i);
+                                        if (titleMatch) {
+                                            title = titleMatch[1].trim();
+                                            
+                                            // Buscar el texto en el siguiente párrafo
+                                            const nextP = element.next('p');
+                                            if (nextP.length) {
+                                                text = nextP.text().trim();
+                                            } else {
+                                                // Si no hay siguiente párrafo, usar el resto del texto actual
+                                                text = element.text().replace(titleMatch[0], '').trim();
+                                            }
                                         }
                                     }
                                     
-                                    // Patrón 3: Título en negrita seguido de texto
-                                    if (!titleMatch && article.html() && article.html().includes('<strong>')) {
-                                        const strongText = article.find('strong').text().trim();
-                                        if (strongText) {
-                                            titleMatch = [null, strongText, ''];
-                                        }
-                                    }
-                                    
-                                    if (titleMatch) {
-                                        const title = titleMatch[1].trim();
-                                        const text = article.next('p').text().trim() || 
-                                                    article.text().replace(title, '').trim();
-                                        
-                                        if (title && text) {
-                                            news.push({
-                                                category: mapCategory(sectionKeyword),
-                                                title,
-                                                text,
-                                                link: '#'
-                                            });
-                                            console.log('Artículo procesado:', { title });
-                                        }
+                                    // Si encontramos título y texto, añadir a las noticias
+                                    if (title && text) {
+                                        news.push({
+                                            category: mapCategory(section.title.split(' ')[0]),
+                                            title,
+                                            text,
+                                            link: '#'
+                                        });
+                                        console.log(`  Artículo añadido: "${title.substring(0, 30)}..."`);
                                     }
                                 }
                             });
                         });
-                    } else {
-                        console.log(`No se encontró la sección "${sectionKeyword}"`);
                     }
-                });
-                
-                if (news.length > 0) {
-                    console.log(`Encontrados ${news.length} artículos`);
-                    return { news, isUpdated: true };
                 }
                 
-                console.log('No se encontraron artículos en la página');
-                
-            } catch (error) {
-                console.log(`Error con fecha ${formattedDate}:`, error.message);
-                if (error.response) {
-                    console.log(`Status: ${error.response.status}`);
-                    console.log(`Headers:`, error.response.headers);
+                // Si encontramos suficientes noticias, terminamos
+                if (news.length >= 5) {
+                    console.log(`Encontradas ${news.length} noticias. Suficiente para continuar.`);
+                    break;
                 }
             }
+            
+            if (news.length > 0) {
+                console.log(`Total de noticias encontradas: ${news.length}`);
+                return { news, isUpdated: true };
+            } else {
+                console.log('No se encontraron noticias en la página');
+                return { news: getDefaultNews().news, isUpdated: false };
+            }
+            
+        } catch (error) {
+            console.error(`Error accediendo a ${fixedUrl}:`, error.message);
+            if (error.response) {
+                console.log(`Status: ${error.response.status}`);
+            }
+            return { news: getDefaultNews().news, isUpdated: false };
         }
         
-        console.log('No se encontró una newsletter válida en los últimos 4 días');
-        return { news: getDefaultNews().news, isUpdated: false };
-        
     } catch (error) {
-        console.error('Error en scraping:', error);
-        console.log('Retornando noticias por defecto debido a error');
+        console.error('Error general en scraping:', error);
         return { news: getDefaultNews().news, isUpdated: false };
     }
 }

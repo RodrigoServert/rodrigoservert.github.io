@@ -170,114 +170,168 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     function createSkeletonTemplate() {
-        return `
-            <article class="news-item skeleton-item">
-                <div class="news-content-wrapper">
-                    <div class="skeleton-image"></div>
-                    <div class="news-content">
-                        <div class="skeleton-category"></div>
-                        <div class="skeleton-title"></div>
-                        <div class="skeleton-text"></div>
-                        <div class="skeleton-text"></div>
+        // Crear esqueletos en todas las columnas
+        const newsColumns = document.querySelectorAll('.news-column');
+        
+        // Limpiar columnas primero
+        newsColumns.forEach(column => {
+            column.innerHTML = '';
+        });
+        
+        // Añadir 2-3 esqueletos por columna
+        newsColumns.forEach(column => {
+            const skeletonsCount = Math.floor(Math.random() * 2) + 2; // 2-3 esqueletos
+            
+            for (let i = 0; i < skeletonsCount; i++) {
+                const skeletonItem = document.createElement('div');
+                skeletonItem.className = 'news-item';
+                
+                skeletonItem.innerHTML = `
+                    <div class="news-skeleton">
+                        <div class="skeleton-item skeleton-image"></div>
+                        <div class="skeleton-item skeleton-category"></div>
+                        <div class="skeleton-item skeleton-title"></div>
+                        <div class="skeleton-item skeleton-text"></div>
                     </div>
-                </div>
-            </article>
-        `;
+                `;
+                
+                column.appendChild(skeletonItem);
+            }
+        });
+        
+        console.log('Esqueletos de carga creados');
     }
 
     async function loadNews() {
         try {
-            // Primero mostrar los skeletons
-            const newsColumns = document.querySelectorAll('.news-column');
-            newsColumns.forEach(column => {
-                column.innerHTML = Array(3).fill(createSkeletonTemplate()).join('');
-            });
-
-            const newsData = await fetchScrapedNews();
+            console.log('Iniciando carga de noticias...');
             
-            // Limpiar los skeletons
-            newsColumns.forEach(column => column.innerHTML = '');
+            // Mostrar esqueletos mientras cargamos
+            createSkeletonTemplate();
             
-            console.log('Datos recibidos:', newsData);
+            // Intentar obtener noticias scrapeadas
+            console.log('Intentando obtener noticias scrapeadas...');
+            let newsData;
             
+            try {
+                newsData = await fetchScrapedNews();
+                console.log('Noticias obtenidas correctamente:', newsData);
+                
+                if (!newsData || !newsData.news || newsData.news.length === 0) {
+                    console.log('No se obtuvieron noticias del scraper, cargando noticias por defecto');
+                    newsData = loadDefaultNews();
+                }
+            } catch (error) {
+                console.error('Error al obtener noticias scrapeadas:', error);
+                console.log('Cargando noticias por defecto debido al error');
+                newsData = loadDefaultNews();
+            }
+            
+            // Verificar que tenemos noticias para mostrar
             if (!newsData || !newsData.news || newsData.news.length === 0) {
-                console.log('No hay noticias, cargando noticias por defecto');
-                loadDefaultNews();
+                console.error('No hay noticias disponibles para mostrar');
                 return;
             }
-
-            // Distribuir las noticias equitativamente
-            const newsPerColumn = Math.ceil(newsData.news.length / newsColumns.length);
-            newsData.news.forEach((newsItem, index) => {
-                const columnIndex = Math.floor(index / newsPerColumn);
-                const column = newsColumns[columnIndex];
+            
+            console.log(`Mostrando ${newsData.news.length} noticias`);
+            
+            // Limpiar columnas
+            const columns = document.querySelectorAll('.news-column');
+            columns.forEach(column => column.innerHTML = '');
+            
+            // Distribuir noticias en columnas
+            const news = newsData.news;
+            for (let i = 0; i < news.length; i++) {
+                const columnIndex = i % columns.length;
+                const column = columns[columnIndex];
                 
-                if (column) {
-                    const articleTemplate = `
-                        <article class="news-item">
-                            <a href="${newsItem.link || '#'}" class="article-link" target="_blank" rel="noopener noreferrer">
-                                <div class="news-content-wrapper">
-                                    ${newsItem.image ? `
-                                        <div class="news-image">
-                                            <span class="news-category news-category-overlay">${newsItem.category}</span>
-                                            <img src="${newsItem.image}" alt="${newsItem.title}" loading="lazy" />
-                                        </div>
-                                    ` : ''}
-                                    <div class="news-content">
-                                        <div class="news-header">
-                                            <span class="news-category">${newsItem.category}</span>
-                                        </div>
-                                        <h2 class="news-title">${newsItem.title}</h2>
-                                        <p class="news-text">${newsItem.text}</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </article>
-                    `;
-                    column.innerHTML += articleTemplate;
-                }
-            });
-
+                // Crear elemento de noticia
+                const newsItem = document.createElement('div');
+                newsItem.className = 'news-item';
+                
+                // Contenido de la noticia
+                const newsContent = `
+                    <div class="news-skeleton">
+                        <div class="skeleton-item skeleton-image"></div>
+                        <div class="skeleton-item skeleton-category"></div>
+                        <div class="skeleton-item skeleton-title"></div>
+                        <div class="skeleton-item skeleton-text"></div>
+                    </div>
+                    <div class="news-content-wrapper" style="opacity: 0;">
+                        <div class="news-category-overlay">${news[i].category}</div>
+                        <div class="news-content">
+                            <div class="news-category">${news[i].category}</div>
+                            <h3 class="news-title">${news[i].title}</h3>
+                            <p class="news-text">${news[i].text}</p>
+                        </div>
+                    </div>
+                `;
+                
+                newsItem.innerHTML = newsContent;
+                column.appendChild(newsItem);
+                
+                // Simular carga con retraso
+                setTimeout(() => {
+                    newsItem.classList.add('loaded');
+                    loadNewsItem(newsItem);
+                }, 500 + i * 100);
+            }
+            
+            // Actualizar fecha
+            updateDateTime();
+            
+            console.log('Noticias cargadas correctamente');
         } catch (error) {
-            console.error('Error loading news:', error);
-            loadDefaultNews();
+            console.error('Error general al cargar noticias:', error);
         }
     }
 
     // Función para cargar noticias por defecto
     function loadDefaultNews() {
-        try {
-            const newsColumns = document.querySelectorAll('.news-column');
-            const defaultNews = getDefaultNews().news;
-            
-            newsColumns.forEach(column => column.innerHTML = '');
-            
-            defaultNews.forEach((newsItem, index) => {
-                const columnIndex = index % newsColumns.length;
-                const column = newsColumns[columnIndex];
-                if (column) {
-                    // Usar el mismo template que arriba
-                    const articleTemplate = `
-                        <article class="news-item">
-                            <a href="${newsItem.link || '#'}" class="article-link" target="_blank" rel="noopener noreferrer">
-                                <div class="news-content-wrapper" style="opacity: 1;">
-                                    <div class="news-content">
-                                        <div class="news-header">
-                                            <span class="news-category">${newsItem.category}</span>
-                                        </div>
-                                        <h2 class="news-title">${newsItem.title}</h2>
-                                        <p class="news-text">${newsItem.text}</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </article>
-                    `;
-                    column.innerHTML += articleTemplate;
+        console.log('Cargando noticias por defecto');
+        
+        // Noticias por defecto
+        return {
+            news: [
+                {
+                    category: "Technology",
+                    title: "Apple's Vision Pro Launches Globally 🥽",
+                    text: "Apple's mixed reality headset is now available worldwide, marking a significant milestone in consumer AR/VR technology.",
+                    link: "https://www.apple.com/vision-pro"
+                },
+                {
+                    category: "AI",
+                    title: "Claude 3 Sets New AI Benchmark 🤖",
+                    text: "Anthropic's latest AI model demonstrates unprecedented capabilities in reasoning and safety features.",
+                    link: "https://www.anthropic.com"
+                },
+                {
+                    category: "Innovation",
+                    title: "SpaceX's Starship Completes Full Flight 🚀",
+                    text: "The latest test of SpaceX's Starship successfully demonstrated all flight phases, including reentry.",
+                    link: "https://www.spacex.com"
+                },
+                {
+                    category: "Tech",
+                    title: "EU Passes Landmark AI Regulation 🇪🇺",
+                    text: "The European Union has approved comprehensive AI regulations, setting global standards for AI development.",
+                    link: "https://ec.europa.eu"
+                },
+                {
+                    category: "Science",
+                    title: "NASA's Artemis Program Advances 🌙",
+                    text: "NASA's Artemis program has reached new milestones in its mission to return humans to the Moon by 2025.",
+                    link: "https://www.nasa.gov/artemis"
+                },
+                {
+                    category: "Programming",
+                    title: "TypeScript 5.0 Released with Major Improvements ⌨️",
+                    text: "Microsoft has released TypeScript 5.0 with significant performance improvements and new language features.",
+                    link: "https://www.typescriptlang.org"
                 }
-            });
-        } catch (error) {
-            console.error('Error loading default news:', error);
-        }
+            ],
+            isUpdated: false
+        };
     }
 
     async function findLatestNewsletter() {
