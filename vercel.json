@@ -20,31 +20,20 @@
     {
       "src": "/api/scrape-news",
       "methods": ["GET", "POST", "OPTIONS"],
-      "dest": "api/scrape-news.js",
+      "dest": "/api/scrape-news.js",
       "headers": {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0"
-      }
-    },
-    {
-      "src": "/api/static-news",
-      "methods": ["GET"],
-      "dest": "server.js",
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate"
       }
     },
     {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "/server.js"
     }
   ],
-  "github": {
-    "silent": false
+  "env": {
+    "NODE_ENV": "production"
   }
 }

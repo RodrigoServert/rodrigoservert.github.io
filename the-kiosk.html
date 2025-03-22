@@ -38,31 +38,31 @@
     </nav>
     
     <script>
-        // Titulares predefinidos para TechCrunch
-        const techCrunchHeadlines = [
+        // Titulares predefinidos para TechCrunch (como respaldo)
+        const fallbackHeadlines = [
             {
-                title: "Gemini and Google I/O: What to expect this week",
-                link: "https://techcrunch.com/2024/05/13/gemini-and-google-i-o-what-to-expect-this-week/",
+                title: "Data breach at stalkerware SpyX affects close to 2 million, including thousands of Apple users",
+                link: "https://techcrunch.com/2025/03/19/data-breach-at-stalkerware-spyx-affects-close-to-2-million-including-thousands-of-apple-users/",
                 category: "TechCrunch"
             },
             {
-                title: "Scammy instant loan apps targeting Southeast Asians spread to Malaysia",
-                link: "https://techcrunch.com/2024/05/13/scammy-instant-loan-apps-targeting-southeast-asians-spread-to-malaysia/",
+                title: "X users treating Grok like a fact-checker spark concerns over misinformation",
+                link: "https://techcrunch.com/2025/03/19/x-users-treating-grok-like-a-fact-checker-spark-concerns-over-misinformation/",
                 category: "TechCrunch"
             },
             {
-                title: "Adobe's new Liquid Mode turns any video into a vertical, phone-friendly one",
-                link: "https://techcrunch.com/2024/05/13/adobes-new-liquid-mode-turns-any-video-into-a-vertical-phone-friendly-one/",
+                title: "Sequoia shutters Washington, D.C., office, lets go of policy team",
+                link: "https://techcrunch.com/2025/03/19/sequoia-shutters-washington-d-c-office-lets-go-of-policy-team/",
                 category: "TechCrunch"
             },
             {
-                title: "Let the hunt for the new FTC commissioner begin",
-                link: "https://techcrunch.com/2024/05/13/let-the-hunt-for-the-new-ftc-commissioner-begin/",
+                title: "OpenAI research lead Noam Brown thinks certain AI 'reasoning' models could've arrived decades ago",
+                link: "https://techcrunch.com/2025/03/19/openai-research-lead-noam-brown-thinks-ai-reasoning-models-couldve-arrived-decades-ago/",
                 category: "TechCrunch"
             },
             {
-                title: "Plaid goes deeper into lending market with $260M acquisition of Amount",
-                link: "https://techcrunch.com/2024/05/13/plaid-goes-deeper-into-lending-market-with-260m-acquisition-of-amount/",
+                title: "Nvidia reportedly acquires synthetic data startup Gretel",
+                link: "https://techcrunch.com/2025/03/19/nvidia-reportedly-acquires-synthetic-data-startup-gretel/",
                 category: "TechCrunch"
             }
         ];
@@ -80,21 +80,81 @@
             };
             dateElement.textContent = now.toLocaleDateString('es-ES', options);
             
-            // Cargar los titulares predefinidos inmediatamente
-            renderHeadlines(techCrunchHeadlines);
+            // Cargar los titulares de TechCrunch
+            fetchHeadlines();
             
-            // Agregar evento al botón de recarga (simulará una recarga)
+            // Agregar evento al botón de recarga
             document.getElementById('reload-headlines').addEventListener('click', function() {
-                // Mostrar mensaje de carga
-                const headlinesList = document.getElementById('headlines-list');
-                headlinesList.innerHTML = '<p class="loading-message">Cargando titulares...</p>';
-                
-                // Simular una carga con un pequeño retraso
-                setTimeout(() => {
-                    renderHeadlines(techCrunchHeadlines);
-                }, 500);
+                fetchHeadlines();
             });
         });
+        
+        // Función para cargar los titulares desde la API
+        async function fetchHeadlines() {
+            const headlinesList = document.getElementById('headlines-list');
+            
+            // Mostrar mensaje de carga
+            headlinesList.innerHTML = '<p class="loading-message">Cargando titulares...</p>';
+            
+            try {
+                // Determinar la URL base (producción o desarrollo)
+                const baseUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') 
+                    ? '' // En desarrollo, usamos rutas relativas
+                    : ''; // En producción, rutas relativas
+                
+                // Intentar obtener titulares de la API
+                let headlines = [];
+                
+                try {
+                    console.log('Iniciando petición a /api/scrape-news');
+                    
+                    // Agregamos un parámetro timestamp para evitar caché
+                    const timestamp = new Date().getTime();
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    
+                    const response = await fetch(`${baseUrl}/api/scrape-news?t=${timestamp}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        },
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    // Si la API responde correctamente
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Verificar que es un array
+                        if (Array.isArray(data) && data.length > 0) {
+                            headlines = data;
+                            console.log('Titulares obtenidos de la API:', headlines.length);
+                        } else {
+                            console.warn('La API devolvió datos con formato incorrecto, usando fallback');
+                            headlines = fallbackHeadlines;
+                        }
+                    } else {
+                        // Si hay un error de HTTP, usar fallback
+                        console.warn(`Error de la API (${response.status}), usando fallback`);
+                        headlines = fallbackHeadlines;
+                    }
+                } catch (error) {
+                    // Si hay un error en el fetch, usar fallback
+                    console.error('Error al obtener titulares:', error);
+                    headlines = fallbackHeadlines;
+                }
+                
+                // Renderizar los titulares (ya sea de la API o fallback)
+                renderHeadlines(headlines);
+                
+            } catch (error) {
+                console.error('Error general:', error);
+                renderHeadlines(fallbackHeadlines);
+            }
+        }
         
         // Función para renderizar los titulares
         function renderHeadlines(headlines) {
@@ -102,6 +162,11 @@
             
             // Limpiar el contenedor
             headlinesList.innerHTML = '';
+            
+            // Si no hay titulares, usar fallback
+            if (!headlines || headlines.length === 0) {
+                headlines = fallbackHeadlines;
+            }
             
             // Crear la lista de titulares
             const headlinesUl = document.createElement('ul');
