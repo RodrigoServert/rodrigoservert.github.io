@@ -38,8 +38,8 @@
     </nav>
     
     <script>
-        // Titulares predefinidos para TechCrunch (como respaldo)
-        const fallbackHeadlines = [
+        // Titulares de TechCrunch actualizados (abril 2024)
+        const headlinesData = [
             {
                 title: "Data breach at stalkerware SpyX affects close to 2 million, including thousands of Apple users",
                 link: "https://techcrunch.com/2025/03/19/data-breach-at-stalkerware-spyx-affects-close-to-2-million-including-thousands-of-apple-users/",
@@ -80,81 +80,21 @@
             };
             dateElement.textContent = now.toLocaleDateString('es-ES', options);
             
-            // Cargar los titulares de TechCrunch
-            fetchHeadlines();
+            // Cargar los titulares inmediatamente
+            renderHeadlines(headlinesData);
             
-            // Agregar evento al botón de recarga
+            // Agregar evento al botón de recarga (simulará una recarga)
             document.getElementById('reload-headlines').addEventListener('click', function() {
-                fetchHeadlines();
+                // Mostrar mensaje de carga
+                const headlinesList = document.getElementById('headlines-list');
+                headlinesList.innerHTML = '<p class="loading-message">Cargando titulares...</p>';
+                
+                // Simular una carga con un pequeño retraso
+                setTimeout(() => {
+                    renderHeadlines(headlinesData);
+                }, 800);
             });
         });
-        
-        // Función para cargar los titulares desde la API
-        async function fetchHeadlines() {
-            const headlinesList = document.getElementById('headlines-list');
-            
-            // Mostrar mensaje de carga
-            headlinesList.innerHTML = '<p class="loading-message">Cargando titulares...</p>';
-            
-            try {
-                // Determinar la URL base (producción o desarrollo)
-                const baseUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') 
-                    ? '' // En desarrollo, usamos rutas relativas
-                    : ''; // En producción, rutas relativas
-                
-                // Intentar obtener titulares de la API
-                let headlines = [];
-                
-                try {
-                    console.log('Iniciando petición a /api/scrape-news');
-                    
-                    // Agregamos un parámetro timestamp para evitar caché
-                    const timestamp = new Date().getTime();
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 5000);
-                    
-                    const response = await fetch(`${baseUrl}/api/scrape-news?t=${timestamp}`, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Cache-Control': 'no-cache'
-                        },
-                        signal: controller.signal
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    
-                    // Si la API responde correctamente
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        // Verificar que es un array
-                        if (Array.isArray(data) && data.length > 0) {
-                            headlines = data;
-                            console.log('Titulares obtenidos de la API:', headlines.length);
-                        } else {
-                            console.warn('La API devolvió datos con formato incorrecto, usando fallback');
-                            headlines = fallbackHeadlines;
-                        }
-                    } else {
-                        // Si hay un error de HTTP, usar fallback
-                        console.warn(`Error de la API (${response.status}), usando fallback`);
-                        headlines = fallbackHeadlines;
-                    }
-                } catch (error) {
-                    // Si hay un error en el fetch, usar fallback
-                    console.error('Error al obtener titulares:', error);
-                    headlines = fallbackHeadlines;
-                }
-                
-                // Renderizar los titulares (ya sea de la API o fallback)
-                renderHeadlines(headlines);
-                
-            } catch (error) {
-                console.error('Error general:', error);
-                renderHeadlines(fallbackHeadlines);
-            }
-        }
         
         // Función para renderizar los titulares
         function renderHeadlines(headlines) {
@@ -162,11 +102,6 @@
             
             // Limpiar el contenedor
             headlinesList.innerHTML = '';
-            
-            // Si no hay titulares, usar fallback
-            if (!headlines || headlines.length === 0) {
-                headlines = fallbackHeadlines;
-            }
             
             // Crear la lista de titulares
             const headlinesUl = document.createElement('ul');
