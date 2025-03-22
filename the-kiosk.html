@@ -38,31 +38,31 @@
     </nav>
     
     <script>
-        // Noticias estáticas como respaldo
-        const fallbackHeadlines = [
+        // Titulares predefinidos para TechCrunch
+        const techCrunchHeadlines = [
             {
-                title: "Apple lanza su nueva línea de productos para 2024",
-                link: "https://techcrunch.com/category/apple/",
+                title: "Gemini and Google I/O: What to expect this week",
+                link: "https://techcrunch.com/2024/05/13/gemini-and-google-i-o-what-to-expect-this-week/",
                 category: "TechCrunch"
             },
             {
-                title: "Las startups de IA que están revolucionando el mercado",
-                link: "https://techcrunch.com/category/artificial-intelligence/",
+                title: "Scammy instant loan apps targeting Southeast Asians spread to Malaysia",
+                link: "https://techcrunch.com/2024/05/13/scammy-instant-loan-apps-targeting-southeast-asians-spread-to-malaysia/",
                 category: "TechCrunch"
             },
             {
-                title: "Amazon Web Services presenta nuevas soluciones para empresas",
-                link: "https://techcrunch.com/category/enterprise/",
+                title: "Adobe's new Liquid Mode turns any video into a vertical, phone-friendly one",
+                link: "https://techcrunch.com/2024/05/13/adobes-new-liquid-mode-turns-any-video-into-a-vertical-phone-friendly-one/",
                 category: "TechCrunch"
             },
             {
-                title: "El metaverso: próxima revolución tecnológica o solo una moda pasajera",
-                link: "https://techcrunch.com/category/meta/",
+                title: "Let the hunt for the new FTC commissioner begin",
+                link: "https://techcrunch.com/2024/05/13/let-the-hunt-for-the-new-ftc-commissioner-begin/",
                 category: "TechCrunch"
             },
             {
-                title: "Las 10 startups más prometedoras según inversores de Silicon Valley",
-                link: "https://techcrunch.com/category/venture/",
+                title: "Plaid goes deeper into lending market with $260M acquisition of Amount",
+                link: "https://techcrunch.com/2024/05/13/plaid-goes-deeper-into-lending-market-with-260m-acquisition-of-amount/",
                 category: "TechCrunch"
             }
         ];
@@ -80,129 +80,21 @@
             };
             dateElement.textContent = now.toLocaleDateString('es-ES', options);
             
-            // Cargar los titulares de TechCrunch
-            fetchHeadlines();
+            // Cargar los titulares predefinidos inmediatamente
+            renderHeadlines(techCrunchHeadlines);
             
-            // Agregar evento al botón de recarga
+            // Agregar evento al botón de recarga (simulará una recarga)
             document.getElementById('reload-headlines').addEventListener('click', function() {
-                fetchHeadlines();
+                // Mostrar mensaje de carga
+                const headlinesList = document.getElementById('headlines-list');
+                headlinesList.innerHTML = '<p class="loading-message">Cargando titulares...</p>';
+                
+                // Simular una carga con un pequeño retraso
+                setTimeout(() => {
+                    renderHeadlines(techCrunchHeadlines);
+                }, 500);
             });
         });
-        
-        // Función para cargar los titulares desde la API
-        async function fetchHeadlines() {
-            const headlinesList = document.getElementById('headlines-list');
-            
-            // Mostrar mensaje de carga
-            headlinesList.innerHTML = '<p class="loading-message">Cargando titulares...</p>';
-            
-            try {
-                // Determinar la URL base (producción o desarrollo)
-                const baseUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') 
-                    ? '' // En desarrollo, usamos rutas relativas
-                    : ''; // En producción, también usamos rutas relativas pero Vercel las gestiona
-                
-                // Agregamos un parámetro timestamp para evitar caché
-                const timestamp = new Date().getTime();
-                
-                // Intentamos primero obtener noticias del endpoint estático como fallback seguro
-                let headlines = [];
-                let useStaticNews = false;
-                
-                try {
-                    console.log('Intentando obtener noticias estáticas como respaldo inicial');
-                    const staticResponse = await fetch(`${baseUrl}/api/static-news?t=${timestamp}`, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Cache-Control': 'no-cache'
-                        },
-                        // Tiempo de espera corto para esta petición
-                        signal: AbortSignal.timeout(2000)
-                    });
-                    
-                    if (staticResponse.ok) {
-                        const staticData = await staticResponse.json();
-                        if (Array.isArray(staticData) && staticData.length > 0) {
-                            headlines = staticData;
-                            useStaticNews = true;
-                            console.log('Noticias estáticas cargadas correctamente como respaldo');
-                        }
-                    }
-                } catch (staticError) {
-                    console.warn('No se pudieron cargar las noticias estáticas:', staticError);
-                }
-                
-                // Ahora intentamos obtener noticias dinámicas del scraper si no tenemos estáticas
-                if (!useStaticNews) {
-                    console.log('Iniciando petición a /api/scrape-news');
-                    
-                    // Intentamos hacer la petición con un timeout de 3 segundos
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3000);
-                    
-                    try {
-                        const response = await fetch(`${baseUrl}/api/scrape-news?t=${timestamp}`, {
-                            method: 'GET',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Cache-Control': 'no-cache'
-                            },
-                            signal: controller.signal
-                        });
-                        
-                        clearTimeout(timeoutId);
-                        
-                        console.log('Respuesta recibida:', response.status, response.statusText);
-                        
-                        if (!response.ok) {
-                            throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
-                        }
-                        
-                        const data = await response.json();
-                        console.log('Datos recibidos:', data);
-                        
-                        // Comprobar si data es un array
-                        if (!Array.isArray(data)) {
-                            console.error('Los datos recibidos no son un array:', data);
-                            
-                            // Si data tiene una propiedad específica que es un array, usar esa
-                            if (data && Array.isArray(data.news)) {
-                                console.log('Usando data.news como array de titulares');
-                                headlines = data.news;
-                            } else if (data && Array.isArray(data.defaultNews)) {
-                                console.log('Usando data.defaultNews como array de titulares');
-                                headlines = data.defaultNews;
-                            } else if (headlines.length === 0) {
-                                // Si no tenemos headlines todavía, usar el fallback
-                                console.log('Usando titulares de respaldo predefinidos');
-                                headlines = fallbackHeadlines;
-                            }
-                        } else {
-                            // Si obtuvimos un array válido, usarlo
-                            headlines = data;
-                        }
-                    } catch (fetchError) {
-                        console.error('Error en fetch:', fetchError);
-                        clearTimeout(timeoutId);
-                        
-                        // Si hay un error en el fetch y no tenemos headlines, usar datos de respaldo
-                        if (headlines.length === 0) {
-                            console.log('Usando titulares de respaldo debido a error de fetch');
-                            headlines = fallbackHeadlines;
-                        }
-                    }
-                }
-                
-                // Renderizar los headlines obtenidos (ya sean dinámicos, estáticos o de respaldo)
-                renderHeadlines(headlines);
-                
-            } catch (error) {
-                console.error('Error general durante la carga de titulares:', error);
-                // En caso de cualquier error, mostrar siempre los titulares de respaldo
-                renderHeadlines(fallbackHeadlines);
-            }
-        }
         
         // Función para renderizar los titulares
         function renderHeadlines(headlines) {
@@ -210,12 +102,6 @@
             
             // Limpiar el contenedor
             headlinesList.innerHTML = '';
-            
-            if (!headlines || headlines.length === 0) {
-                // Si no hay titulares, usar los de respaldo
-                console.log('No hay titulares, usando respaldo');
-                headlines = fallbackHeadlines;
-            }
             
             // Crear la lista de titulares
             const headlinesUl = document.createElement('ul');
