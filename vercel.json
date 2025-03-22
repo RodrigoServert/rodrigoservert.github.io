@@ -2,6 +2,13 @@
   "version": 2,
   "builds": [
     { 
+      "src": "server.js", 
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 60
+      }
+    },
+    { 
       "src": "api/**/*.js", 
       "use": "@vercel/node",
       "config": {
@@ -22,6 +29,10 @@
         "Pragma": "no-cache",
         "Expires": "0"
       }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
     }
   ],
   "github": {

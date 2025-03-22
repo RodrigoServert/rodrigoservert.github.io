@@ -4,10 +4,14 @@ const path = require('path');
 const { scrapeNews } = require('./api/lib/scraper');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Configurar CORS
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Servir archivos estáticos
 app.use(express.static('.'));
@@ -31,11 +35,17 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Ruta para The Comma
-app.get('/the-comma', (req, res) => {
-    res.sendFile(path.join(__dirname, 'the-comma.html'));
+// Ruta para The Kiosk
+app.get('/the-kiosk', (req, res) => {
+    res.sendFile(path.join(__dirname, 'the-kiosk.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-}); 
+// Para compatibilidad con Vercel, exportamos la app
+module.exports = app;
+
+// Solo iniciamos el servidor si no estamos en Vercel
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    });
+} 
