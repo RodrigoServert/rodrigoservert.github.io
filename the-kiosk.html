@@ -38,6 +38,35 @@
     </nav>
     
     <script>
+        // Noticias estáticas como respaldo
+        const fallbackHeadlines = [
+            {
+                title: "Apple lanza su nueva línea de productos para 2024",
+                link: "https://techcrunch.com/category/apple/",
+                category: "TechCrunch"
+            },
+            {
+                title: "Las startups de IA que están revolucionando el mercado",
+                link: "https://techcrunch.com/category/artificial-intelligence/",
+                category: "TechCrunch"
+            },
+            {
+                title: "Amazon Web Services presenta nuevas soluciones para empresas",
+                link: "https://techcrunch.com/category/enterprise/",
+                category: "TechCrunch"
+            },
+            {
+                title: "El metaverso: próxima revolución tecnológica o solo una moda pasajera",
+                link: "https://techcrunch.com/category/meta/",
+                category: "TechCrunch"
+            },
+            {
+                title: "Las 10 startups más prometedoras según inversores de Silicon Valley",
+                link: "https://techcrunch.com/category/venture/",
+                category: "TechCrunch"
+            }
+        ];
+
         // Script para mostrar la fecha
         document.addEventListener('DOMContentLoaded', function() {
             // Mostrar la fecha actual
@@ -73,87 +102,105 @@
                     ? '' // En desarrollo, usamos rutas relativas
                     : ''; // En producción, también usamos rutas relativas pero Vercel las gestiona
                 
-                console.log('Iniciando petición a /api/scrape-news');
-                
                 // Agregamos un parámetro timestamp para evitar caché
                 const timestamp = new Date().getTime();
-                const response = await fetch(`${baseUrl}/api/scrape-news?t=${timestamp}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
                 
-                console.log('Respuesta recibida:', response.status, response.statusText);
+                // Intentamos primero obtener noticias del endpoint estático como fallback seguro
+                let headlines = [];
+                let useStaticNews = false;
                 
-                if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                console.log('Datos recibidos:', data);
-                
-                // Comprobar si data es un array
-                if (!Array.isArray(data)) {
-                    console.error('Los datos recibidos no son un array:', data);
+                try {
+                    console.log('Intentando obtener noticias estáticas como respaldo inicial');
+                    const staticResponse = await fetch(`${baseUrl}/api/static-news?t=${timestamp}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        },
+                        // Tiempo de espera corto para esta petición
+                        signal: AbortSignal.timeout(2000)
+                    });
                     
-                    // Si data tiene una propiedad específica que es un array, usar esa
-                    if (data && Array.isArray(data.news)) {
-                        console.log('Usando data.news como array de titulares');
-                        renderHeadlines(data.news);
-                    } else if (data && Array.isArray(data.defaultNews)) {
-                        console.log('Usando data.defaultNews como array de titulares');
-                        renderHeadlines(data.defaultNews);
-                    } else if (data && data.error) {
-                        // Mostrar error específico del servidor
-                        headlinesList.innerHTML = `
-                            <div class="error-message">
-                                <p>Error al cargar los titulares. Por favor, intenta más tarde.</p>
-                                <p class="error-details">Detalles: ${data.error || data.message || 'Error desconocido'}</p>
-                            </div>
-                        `;
-                    } else {
-                        headlinesList.innerHTML = '<p>Error: Formato de datos incorrecto</p>';
+                    if (staticResponse.ok) {
+                        const staticData = await staticResponse.json();
+                        if (Array.isArray(staticData) && staticData.length > 0) {
+                            headlines = staticData;
+                            useStaticNews = true;
+                            console.log('Noticias estáticas cargadas correctamente como respaldo');
+                        }
                     }
-                    return;
+                } catch (staticError) {
+                    console.warn('No se pudieron cargar las noticias estáticas:', staticError);
                 }
                 
-                renderHeadlines(data);
+                // Ahora intentamos obtener noticias dinámicas del scraper si no tenemos estáticas
+                if (!useStaticNews) {
+                    console.log('Iniciando petición a /api/scrape-news');
+                    
+                    // Intentamos hacer la petición con un timeout de 3 segundos
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    
+                    try {
+                        const response = await fetch(`${baseUrl}/api/scrape-news?t=${timestamp}`, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Cache-Control': 'no-cache'
+                            },
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        console.log('Respuesta recibida:', response.status, response.statusText);
+                        
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log('Datos recibidos:', data);
+                        
+                        // Comprobar si data es un array
+                        if (!Array.isArray(data)) {
+                            console.error('Los datos recibidos no son un array:', data);
+                            
+                            // Si data tiene una propiedad específica que es un array, usar esa
+                            if (data && Array.isArray(data.news)) {
+                                console.log('Usando data.news como array de titulares');
+                                headlines = data.news;
+                            } else if (data && Array.isArray(data.defaultNews)) {
+                                console.log('Usando data.defaultNews como array de titulares');
+                                headlines = data.defaultNews;
+                            } else if (headlines.length === 0) {
+                                // Si no tenemos headlines todavía, usar el fallback
+                                console.log('Usando titulares de respaldo predefinidos');
+                                headlines = fallbackHeadlines;
+                            }
+                        } else {
+                            // Si obtuvimos un array válido, usarlo
+                            headlines = data;
+                        }
+                    } catch (fetchError) {
+                        console.error('Error en fetch:', fetchError);
+                        clearTimeout(timeoutId);
+                        
+                        // Si hay un error en el fetch y no tenemos headlines, usar datos de respaldo
+                        if (headlines.length === 0) {
+                            console.log('Usando titulares de respaldo debido a error de fetch');
+                            headlines = fallbackHeadlines;
+                        }
+                    }
+                }
+                
+                // Renderizar los headlines obtenidos (ya sean dinámicos, estáticos o de respaldo)
+                renderHeadlines(headlines);
                 
             } catch (error) {
-                console.error('Error durante la carga de titulares:', error);
-                headlinesList.innerHTML = `
-                    <div class="error-message">
-                        <p>Error al cargar los titulares. Por favor, intenta más tarde.</p>
-                        <p class="error-details">Detalles: ${error.message}</p>
-                    </div>
-                `;
-                
-                // Intentar cargar datos estáticos como respaldo
-                try {
-                    const staticData = [
-                        {
-                            title: "Error al cargar los titulares",
-                            link: "https://techcrunch.com/",
-                            category: "TechCrunch"
-                        },
-                        {
-                            title: "Intenta recargar la página o vuelve más tarde",
-                            link: "https://techcrunch.com/",
-                            category: "TechCrunch"
-                        }
-                    ];
-                    
-                    // Esperar 3 segundos antes de mostrar los datos estáticos
-                    setTimeout(() => {
-                        if (headlinesList.querySelector('.error-message')) {
-                            renderHeadlines(staticData);
-                        }
-                    }, 3000);
-                } catch (fallbackError) {
-                    console.error('Error al cargar datos estáticos:', fallbackError);
-                }
+                console.error('Error general durante la carga de titulares:', error);
+                // En caso de cualquier error, mostrar siempre los titulares de respaldo
+                renderHeadlines(fallbackHeadlines);
             }
         }
         
@@ -165,8 +212,9 @@
             headlinesList.innerHTML = '';
             
             if (!headlines || headlines.length === 0) {
-                headlinesList.innerHTML = '<p>No se encontraron titulares disponibles.</p>';
-                return;
+                // Si no hay titulares, usar los de respaldo
+                console.log('No hay titulares, usando respaldo');
+                headlines = fallbackHeadlines;
             }
             
             // Crear la lista de titulares

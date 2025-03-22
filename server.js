@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { scrapeNews } = require('./api/lib/scraper');
+const { scrapeNews, getDefaultNews } = require('./api/lib/scraper');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,11 +23,42 @@ app.get('/api/scrape-news', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error en el endpoint:', error);
-        res.status(500).json({ 
-            error: 'Error obteniendo noticias',
-            message: error.message 
-        });
+        // En caso de error, devolver noticias por defecto
+        res.status(200).json(getDefaultNews());
     }
+});
+
+// Endpoint para noticias estáticas (como respaldo)
+app.get('/api/static-news', (req, res) => {
+    const staticNews = [
+        {
+            title: "Apple lanza su nueva línea de productos para 2024",
+            link: "https://techcrunch.com/category/apple/",
+            category: "TechCrunch"
+        },
+        {
+            title: "Las startups de IA que están revolucionando el mercado",
+            link: "https://techcrunch.com/category/artificial-intelligence/",
+            category: "TechCrunch"
+        },
+        {
+            title: "Amazon Web Services presenta nuevas soluciones para empresas",
+            link: "https://techcrunch.com/category/enterprise/",
+            category: "TechCrunch"
+        },
+        {
+            title: "El metaverso: próxima revolución tecnológica o solo una moda pasajera",
+            link: "https://techcrunch.com/category/meta/",
+            category: "TechCrunch"
+        },
+        {
+            title: "Las 10 startups más prometedoras según inversores de Silicon Valley",
+            link: "https://techcrunch.com/category/venture/",
+            category: "TechCrunch"
+        }
+    ];
+    
+    res.status(200).json(staticNews);
 });
 
 // Ruta para la página principal

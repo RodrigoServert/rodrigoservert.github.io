@@ -31,6 +31,15 @@
       }
     },
     {
+      "src": "/api/static-news",
+      "methods": ["GET"],
+      "dest": "server.js",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate"
+      }
+    },
+    {
       "src": "/(.*)",
       "dest": "server.js"
     }
