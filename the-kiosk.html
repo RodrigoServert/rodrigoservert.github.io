@@ -68,8 +68,22 @@
             headlinesList.innerHTML = '<p class="loading-message">Cargando titulares...</p>';
             
             try {
+                // Determinar la URL base (producción o desarrollo)
+                const baseUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') 
+                    ? '' // En desarrollo, usamos rutas relativas
+                    : ''; // En producción, también usamos rutas relativas pero Vercel las gestiona
+                
                 console.log('Iniciando petición a /api/scrape-news');
-                const response = await fetch('/api/scrape-news');
+                
+                // Agregamos un parámetro timestamp para evitar caché
+                const timestamp = new Date().getTime();
+                const response = await fetch(`${baseUrl}/api/scrape-news?t=${timestamp}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
                 
                 console.log('Respuesta recibida:', response.status, response.statusText);
                 
@@ -84,13 +98,21 @@
                 if (!Array.isArray(data)) {
                     console.error('Los datos recibidos no son un array:', data);
                     
-                    // Si data tiene una propiedad 'news' que es un array, usar esa
+                    // Si data tiene una propiedad específica que es un array, usar esa
                     if (data && Array.isArray(data.news)) {
                         console.log('Usando data.news como array de titulares');
                         renderHeadlines(data.news);
                     } else if (data && Array.isArray(data.defaultNews)) {
                         console.log('Usando data.defaultNews como array de titulares');
                         renderHeadlines(data.defaultNews);
+                    } else if (data && data.error) {
+                        // Mostrar error específico del servidor
+                        headlinesList.innerHTML = `
+                            <div class="error-message">
+                                <p>Error al cargar los titulares. Por favor, intenta más tarde.</p>
+                                <p class="error-details">Detalles: ${data.error || data.message || 'Error desconocido'}</p>
+                            </div>
+                        `;
                     } else {
                         headlinesList.innerHTML = '<p>Error: Formato de datos incorrecto</p>';
                     }
@@ -107,6 +129,31 @@
                         <p class="error-details">Detalles: ${error.message}</p>
                     </div>
                 `;
+                
+                // Intentar cargar datos estáticos como respaldo
+                try {
+                    const staticData = [
+                        {
+                            title: "Error al cargar los titulares",
+                            link: "https://techcrunch.com/",
+                            category: "TechCrunch"
+                        },
+                        {
+                            title: "Intenta recargar la página o vuelve más tarde",
+                            link: "https://techcrunch.com/",
+                            category: "TechCrunch"
+                        }
+                    ];
+                    
+                    // Esperar 3 segundos antes de mostrar los datos estáticos
+                    setTimeout(() => {
+                        if (headlinesList.querySelector('.error-message')) {
+                            renderHeadlines(staticData);
+                        }
+                    }, 3000);
+                } catch (fallbackError) {
+                    console.error('Error al cargar datos estáticos:', fallbackError);
+                }
             }
         }
         
